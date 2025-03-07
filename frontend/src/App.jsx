@@ -5,12 +5,13 @@ import LandingPage from './Components/LandingPage';
 import EmployeeLogin from './Pages/EmployeeLogin';
 import Dashboard from './Components/Dashboard'; // Import Dashboard
 import ErrorBoundary from './ErrorBoundary.jsx';
+import EmployeeRegister from './Pages/EmployeeRegister.jsx';
 
 const App = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<EmployeeRegister />} />
         <Route
           path="/EmployeeLogin"
           element={

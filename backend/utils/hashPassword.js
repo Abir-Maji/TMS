@@ -13,7 +13,7 @@ async function hashPassword(password) {
 
 // Example usage (for testing):
 async function main() {
-  const plainTextPassword = 'your_password'; // Replace with the password you want to hash
+  const plainTextPassword = '$2b$10$UVycAGbivYyqtqqRuZLa/.d6wV0e2Yp3iF6ZoYiDssc3gx/qRUbsO'; // Replace with the password you want to hash
   const hashedPassword = await hashPassword(plainTextPassword);
   if (hashedPassword) {
     console.log('Hashed password:', hashedPassword);
