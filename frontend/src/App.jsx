@@ -5,6 +5,8 @@ import EmployeeLogin from './Pages/EmployeeLogin';
 import Dashboard from './Components/Dashboard'; // Import Dashboard
 import ErrorBoundary from './ErrorBoundary.jsx';
 import EmployeeRegister from './Pages/EmployeeRegister.jsx';
+import AdminLogin from './Pages/AdminLogin.jsx';
+
 
 const App = () => {
   // Check if the user is authenticated
@@ -24,6 +26,8 @@ const App = () => {
           }
         />
         <Route path="/EmployeeRegister" element={<EmployeeRegister />} />
+        <Route path="/AdminLogin" element={<AdminLogin />} />
+
 
         {/* Protected Route - Only accessible if authenticated */}
         <Route
@@ -33,12 +37,14 @@ const App = () => {
               <Dashboard />
             ) : (
               <Navigate to="/EmployeeLogin" replace />
+              
             )
           }
         />
 
         {/* Fallback Route - Redirect to Login if no matching route */}
         <Route path="*" element={<Navigate to="/EmployeeLogin" replace />} />
+       
       </Routes>
     </Router>
   );

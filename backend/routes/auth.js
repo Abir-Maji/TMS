@@ -1,62 +1,93 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Admin = require('../models/Admin');
 
 // Register a new user (UNSAFE - STORES PLAIN TEXT PASSWORDS)
 router.post('/register', async (req, res) => {
   try {
-      const { username, password } = req.body;
+    const { username, password } = req.body;
 
-      if (!username || !password) {
-          return res.status(400).json({ message: 'Username and password are required' });
-      }
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Username and password are required' });
+    }
 
-      const existingUser = await User.findOne({ username });
-      if (existingUser) {
-          return res.status(409).json({ message: 'Username already exists' });
-      }
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(409).json({ message: 'Username already exists' });
+    }
 
-      // Save the password in plain text (UNSAFE)
-      const newUser = new User({ username, password });
+    // Save the password in plain text (UNSAFE)
+    const newUser = new User({ username, password });
 
-      await newUser.save();
+    await newUser.save();
 
-      res.status(201).json({ message: 'User registered successfully' });
+    res.status(201).json({ message: 'User registered successfully' });
   } catch (error) {
-      console.error('Registration error:', error);
-      res.status(500).json({ message: 'Internal server error' });
+    console.error('Registration error:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
-// Login route (bcrypt.compare still works with plain text)
+// Login route (plain text password comparison)
 router.post('/login', async (req, res) => {
   try {
-      const { username, password } = req.body;
+    const { username, password } = req.body;
 
-      if (!username || !password) {
-          return res.status(400).json({ message: 'Username and password are required' });
-      }
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Username and password are required' });
+    }
 
-      const user = await User.findOne({ username });
+    const user = await User.findOne({ username });
 
-      if (!user) {
-          return res.status(401).json({ message: 'Invalid username or password' });
-      }
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid username or password' });
+    }
 
-      // Compare plain text passwords (UNSAFE)
-      if (password !== user.password) {
-          return res.status(401).json({ message: 'Invalid username or password' });
-      }
+    // Compare plain text passwords (UNSAFE)
+    if (password !== user.password) {
+      return res.status(401).json({ message: 'Invalid username or password' });
+    }
 
-      const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-      res.json({ token });
+    // Generate JWT token
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    res.json({ token });
   } catch (error) {
-      console.error('Login error:', error);
-      res.status(500).json({ message: 'Internal server error' });
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
+
+// Admin Login route (plain text password comparison)
+router.post('/admin/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Username and password are required' });
+    }
+
+    const admin = await Admin.findOne({ username });
+
+    if (!admin) {
+      return res.status(401).json({ message: 'Invalid username or password' });
+    }
+
+    // Compare plain text passwords (UNSAFE)
+    if (password !== admin.password) {
+      return res.status(401).json({ message: 'Invalid username or password' });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign({ userId: admin._id, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    res.json({ token });
+  } catch (error) {
+    console.error('Admin login error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // Middleware for protected routes
 const authenticateJWT = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -85,6 +116,24 @@ router.get('/protected', authenticateJWT, async (req, res) => {
     res.json({ message: 'Protected route accessed successfully', user });
   } catch (error) {
     console.error('Protected route error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Example admin protected route
+router.get('/admin/protected', authenticateJWT, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied. Admins only.' });
+    }
+
+    const admin = await Admin.findById(req.user.userId).select('-password');
+    if (!admin) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+    res.json({ message: 'Admin protected route accessed successfully', admin });
+  } catch (error) {
+    console.error('Admin protected route error:', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
 });
