@@ -6,11 +6,12 @@ import Dashboard from './Components/Dashboard'; // Import Dashboard
 import ErrorBoundary from './ErrorBoundary.jsx';
 import EmployeeRegister from './Pages/EmployeeRegister.jsx';
 import AdminLogin from './Pages/AdminLogin.jsx';
-
+import AdminDashboard from './Components/AdminDashboard.jsx'; // Import Admin Dashboard
 
 const App = () => {
   // Check if the user is authenticated
   const isAuthenticated = !!localStorage.getItem('token');
+  const role = localStorage.getItem('role'); // Get the user's role
 
   return (
     <Router>
@@ -28,7 +29,6 @@ const App = () => {
         <Route path="/EmployeeRegister" element={<EmployeeRegister />} />
         <Route path="/AdminLogin" element={<AdminLogin />} />
 
-
         {/* Protected Route - Only accessible if authenticated */}
         <Route
           path="/dashboard"
@@ -37,14 +37,37 @@ const App = () => {
               <Dashboard />
             ) : (
               <Navigate to="/EmployeeLogin" replace />
-              
+            )
+          }
+        />
+
+        {/* Admin Dashboard Route - Only accessible if authenticated and role is admin */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            isAuthenticated && role === 'admin' ? (
+              <AdminDashboard />
+            ) : (
+              <Navigate to="/AdminLogin" replace />
             )
           }
         />
 
         {/* Fallback Route - Redirect to Login if no matching route */}
-        <Route path="*" element={<Navigate to="/EmployeeLogin" replace />} />
-       
+        <Route
+          path="*"
+          element={
+            isAuthenticated ? (
+              role === 'admin' ? (
+                <Navigate to="/admin/dashboard" replace />
+              ) : (
+                <Navigate to="/dashboard" replace />
+              )
+            ) : (
+              <Navigate to="/EmployeeLogin" replace />
+            )
+          }
+        />
       </Routes>
     </Router>
   );
