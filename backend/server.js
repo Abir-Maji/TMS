@@ -1,16 +1,34 @@
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const connectDB = require('./config/db');
-const authRoutes = require('./routes/auth');
+const dotenv = require('dotenv');
+const connectDB = require('./config/db'); // Import the database connection function
 
-connectDB();
+dotenv.config();
 
+// Initialize Express app
 const app = express();
+
+// Enable CORS
 app.use(cors());
+
+// Parse JSON bodies
 app.use(express.json());
 
+// Connect to MongoDB
+connectDB(); // Ensure this is called before defining routes
+
+// Routes
+const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Server Error:', err.stack);
+    res.status(500).json({ message: 'Internal Server Error' });
+});
+
+// Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+});

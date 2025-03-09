@@ -1,42 +1,66 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
 import login from '../assets/login.svg';
 
 const EmployeeLogin = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
-  const navigate = useNavigate(); // Initialize useNavigate
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState(null);
+    const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-        const response = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password }),
-        });
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await fetch('http://127.0.0.1:5000/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            });
 
-        if (!response.ok) {
-            // Handle non-OK responses (e.g., 401, 500)
-            const errorData = await response.text(); // or response.json() if your server always sends json
-            setError(errorData || 'Login failed.');
-            return;
+            if (!response.ok) {
+                if (response.status === 401) {
+                    setError('Invalid username or password.');
+                } else if (response.status === 404) {
+                    setError('Endpoint not found.');
+                } else if (response.status === 500) {
+                    setError('Server error. Please try again later.');
+                } else {
+                    try {
+                        const errorData = await response.json();
+                        setError(errorData.message || 'Login failed.');
+                    } catch (jsonError) {
+                        setError('Login failed.');
+                        console.error('Error parsing error response:', jsonError);
+                        try {
+                            const rawText = await response.text();
+                            console.error("Raw response text:", rawText);
+                        } catch (textError) {
+                            console.error("Failed to get raw text:", textError);
+                        }
+                    }
+                }
+                return;
+            }
+
+            const data = await response.json();
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('username', username);
+            navigate('/dashboard');
+        } catch (err) {
+            console.error('Login Error:', err);
+            if (err instanceof TypeError && err.message === 'Failed to fetch') {
+                setError('Network error. Please check your connection.');
+            } else {
+                setError('An unexpected error occurred.');
+            }
         }
+    };
 
-        const data = await response.json();
-        localStorage.setItem('token', data.token);
-        navigate('/dashboard');
-    } catch (err) {
-        console.error('Error:', err);
-        setError('An unexpected error occurred.');
-    }
-};
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-200">
             <div className="min-h-max rounded-3xl flex items-center justify-center bg-white">
-                <div className="bg-white p-8  ">
-                    <img src={login} alt="Expense Management" className="w-135 h-auto" />
+                <div className="bg-white p-8">
+                    <img src={login} alt="Employee Login" className="w-135 h-auto" />
                 </div>
                 <div className="bg-white p-8 w-2xl">
                     <h2 className="text-2xl font-bold mb-4 text-center">Employee Login</h2>
