@@ -3,33 +3,48 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Admin = require('../models/Admin');
+const Employee = require('../models/Employee');
 
 // Register a new user (UNSAFE - STORES PLAIN TEXT PASSWORDS)
-router.post('/register', async (req, res) => {
+router.post('/register-employee', async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { name, email, phone, team, username, password } = req.body;
 
-    if (!username || !password) {
-      return res.status(400).json({ message: 'Username and password are required' });
+    // Validate required fields
+    if (!name || !email || !phone || !team || !username || !password) {
+      return res.status(400).json({ message: 'All fields are required' });
     }
 
-    const existingUser = await User.findOne({ username });
-    if (existingUser) {
+    // Check if email or username already exists
+    const existingEmployeeByEmail = await Employee.findOne({ email });
+    const existingEmployeeByUsername = await Employee.findOne({ username });
+
+    if (existingEmployeeByEmail) {
+      return res.status(409).json({ message: 'Email already exists' });
+    }
+    if (existingEmployeeByUsername) {
       return res.status(409).json({ message: 'Username already exists' });
     }
 
-    // Save the password in plain text (UNSAFE)
-    const newUser = new User({ username, password });
+    // Create a new employee
+    const newEmployee = new Employee({
+      name,
+      email,
+      phone,
+      team,
+      username,
+      password, // Storing password as plain text (NOT RECOMMENDED)
+    });
 
-    await newUser.save();
+    // Save the employee to the database
+    await newEmployee.save();
 
-    res.status(201).json({ message: 'User registered successfully' });
+    res.status(201).json({ message: 'Employee registered successfully' });
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('Employee registration error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
-
 // Login route (plain text password comparison)
 router.post('/login', async (req, res) => {
   try {

@@ -20,6 +20,7 @@ connectDB(); // Ensure this is called before defining routes
 // Routes
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
+app.use('/employee', require('./routes/employee'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
