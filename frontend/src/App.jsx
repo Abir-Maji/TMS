@@ -4,7 +4,6 @@ import LandingPage from './Components/LandingPage';
 import EmployeeLogin from './Pages/EmployeeLogin';
 import Dashboard from './Components/Dashboard'; // Import Dashboard
 import ErrorBoundary from './ErrorBoundary.jsx';
-import EmployeeRegister from './Pages/EmployeeRegister.jsx';
 import AdminLogin from './Pages/AdminLogin.jsx';
 import AdminDashboard from './Components/AdminDashboard.jsx'; // Import Admin Dashboard
 
@@ -26,7 +25,6 @@ const App = () => {
             </ErrorBoundary>
           }
         />
-        <Route path="/EmployeeRegister" element={<EmployeeRegister />} />
         <Route path="/AdminLogin" element={<AdminLogin />} />
 
         {/* Protected Route - Only accessible if authenticated */}

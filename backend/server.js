@@ -1,7 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const connectDB = require('./config/db'); // Import the database connection function
+const connectDB = require('./config/db'); 
+const taskRoutes = require('./routes/taskRoutes');
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ connectDB(); // Ensure this is called before defining routes
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
 app.use('/employee', require('./routes/employee'));
+app.use('/tasks', taskRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
