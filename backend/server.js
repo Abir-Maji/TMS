@@ -3,6 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db'); 
 const taskRoutes = require('./routes/taskRoutes');
+const employeeRoutes = require('./routes/employeeController');
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
 app.use('/employee', require('./routes/employee'));
 app.use('/tasks', taskRoutes);
+app.use('/employee', employeeRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

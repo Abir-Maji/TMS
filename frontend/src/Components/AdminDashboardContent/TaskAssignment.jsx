@@ -174,7 +174,7 @@ const TaskAssignment = () => {
           {/* User */}
           <div>
             <label htmlFor="user" className="block text-sm font-medium text-gray-700">
-              Assign to User
+              Assign to Employee
             </label>
             <input
               type="text"
