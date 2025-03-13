@@ -8,6 +8,7 @@ import RoleManagement from '../Components/AdminDashboardContent/RoleManagement';
 import RegisterEmployee from '../Components/AdminDashboardContent/RegisterEmployee';
 import ViewEmployees from '../Components/AdminDashboardContent/ViewEmployees';
 import DefaultContent from '../Components/AdminDashboardContent/DefaultContent';
+import logo from '../assets/logo.png'; // Adjust the path based on your file location
 
 
 const AdminDashboard = () => {
@@ -18,7 +19,7 @@ const AdminDashboard = () => {
   // Logout function
   const handleLogout = () => {
     localStorage.removeItem('authToken');
-    navigate('/adminlogin');
+    navigate('/');
   };
 
   // Toggle sidebar expansion
@@ -46,7 +47,7 @@ const AdminDashboard = () => {
         return <RoleManagement />;
       case 'registerEmployee':
         return <RegisterEmployee />;
-        case 'viewEmployees': // Add case for viewing employees
+      case 'viewEmployees': // Add case for viewing employees
         return <ViewEmployees />;
       default:
         return <DefaultContent />;
@@ -57,13 +58,16 @@ const AdminDashboard = () => {
     <div className="flex">
       {/* Sidebar */}
       <div
-        className={`flex h-screen flex-col justify-between border-e border-gray-100 bg-white transition-all duration-300 ${
-          isSidebarExpanded ? 'w-64' : 'w-16'
-        }`}
+        className={`flex h-screen flex-col justify-between border-e border-gray-100 bg-white transition-all duration-300 ${isSidebarExpanded ? 'w-64' : 'w-16'
+          }`}
       >
         <div>
-          <div className="inline-flex size-16 items-center justify-center">
-            <span className="grid size-10 place-content-center rounded-lg bg-gray-100 text-xs text-gray-600">L</span>
+          <div className="inline-flex items-center justify-center">
+            <img
+              src={logo}
+              alt="Logo"
+              className="max-w-9/12 mt-4 rounded-lg" // Adjust size and styling as needed
+            />
           </div>
 
           <div className="border-t border-gray-100">
@@ -72,9 +76,8 @@ const AdminDashboard = () => {
                 <a
                   href="#"
                   onClick={() => setActiveContent('default')}
-                  className={`group relative flex items-center rounded-sm px-2 py-1.5 ${
-                    isActive('default') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                  }`}
+                  className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('default') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                    }`}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -106,9 +109,8 @@ const AdminDashboard = () => {
                   <a
                     href="#"
                     onClick={() => setActiveContent('taskAssignment')}
-                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${
-                      isActive('taskAssignment') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                    }`}
+                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('taskAssignment') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                      }`}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -134,9 +136,8 @@ const AdminDashboard = () => {
                   <a
                     href="#"
                     onClick={() => setActiveContent('deadlineTracking')}
-                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${
-                      isActive('deadlineTracking') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                    }`}
+                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('deadlineTracking') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                      }`}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -162,9 +163,8 @@ const AdminDashboard = () => {
                   <a
                     href="#"
                     onClick={() => setActiveContent('progressReporting')}
-                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${
-                      isActive('progressReporting') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                    }`}
+                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('progressReporting') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                      }`}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -190,9 +190,8 @@ const AdminDashboard = () => {
                   <a
                     href="#"
                     onClick={() => setActiveContent('collaboration')}
-                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${
-                      isActive('collaboration') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                    }`}
+                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('collaboration') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                      }`}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -218,9 +217,8 @@ const AdminDashboard = () => {
                   <a
                     href="#"
                     onClick={() => setActiveContent('registerEmployee')}
-                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${
-                      isActive('registerEmployee') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                    }`}
+                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('registerEmployee') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                      }`}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -245,9 +243,8 @@ const AdminDashboard = () => {
                   <a
                     href="#"
                     onClick={() => setActiveContent('viewEmployees')}
-                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${
-                      isActive('viewEmployees') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                    }`}
+                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('viewEmployees') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                      }`}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
