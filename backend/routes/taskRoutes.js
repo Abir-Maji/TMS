@@ -6,10 +6,10 @@
 // // Create a new task
 // router.post('/', async (req, res) => {
 //   try {
-//     const { title, description, currentDate, deadline, priority, groupName, user } = req.body;
+//     const { title, description, currentDate, deadline, priority, team, user } = req.body;
 
 //     // Validate input data
-//     if (!title || !description || !currentDate || !deadline || !priority || !groupName || !user) {
+//     if (!title || !description || !currentDate || !deadline || !priority || !team || !user) {
 //       return res.status(400).json({ message: 'All fields are required' });
 //     }
 
@@ -20,7 +20,7 @@
 //       currentDate,
 //       deadline,
 //       priority,
-//       groupName,
+//       team,
 //       user,
 //     });
 
@@ -52,6 +52,7 @@
 const express = require('express');
 const { createTask, getTasks, updateTask, deleteTask } = require('../controllers/taskController');
 
+
 const router = express.Router();
 
 // POST /tasks - Create a new task
@@ -65,5 +66,6 @@ router.put('/:id', updateTask);
 
 // DELETE /tasks/:id - Delete a task
 router.delete('/:id', deleteTask);
+
 
 module.exports = router;

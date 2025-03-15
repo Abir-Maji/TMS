@@ -86,7 +86,7 @@ const DeadlineTracking = () => {
                 <td className="p-2 border text-center">{task.currentDate}</td>
                 <td className="p-2 border text-center">{task.deadline}</td>
                 <td className="p-2 border text-center">{task.priority}</td>
-                <td className="p-2 border text-center">{task.groupName}</td>
+                <td className="p-2 border text-center">{task.team}</td>
                 <td className="p-2 border text-center">{task.user}</td>
                 <td className="p-2 border text-center">
                   <button
@@ -120,7 +120,7 @@ const DeadlineTracking = () => {
                   description: e.target.elements.description.value,
                   deadline: e.target.elements.deadline.value,
                   priority: e.target.elements.priority.value,
-                  groupName: e.target.elements.groupName.value,
+                  team: e.target.elements.team.value,
                   user: e.target.elements.user.value,
                 };
                 handleUpdate(editingTask._id, updatedData);
@@ -149,7 +149,7 @@ const DeadlineTracking = () => {
               <label htmlFor="user" className="block text-sm font-medium text-gray-700">
                 Group
               </label>
-              <input type="text" name="groupName" defaultValue={editingTask.groupName} className="border rounded px-3 py-2 mb-2 w-full" required />
+              <input type="text" name="team" defaultValue={editingTask.team} className="border rounded px-3 py-2 mb-2 w-full" required />
               <label htmlFor="user" className="block text-sm font-medium text-gray-700">
                 Employee Name
               </label>

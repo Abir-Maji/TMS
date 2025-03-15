@@ -6,7 +6,7 @@ const taskSchema = new mongoose.Schema({
   currentDate: { type: String, required: true },
   deadline: { type: String, required: true },
   priority: { type: String, required: true },
-  groupName: { type: String, required: true },
+  team: { type: String, required: true },
   user: { type: String, required: true },
 });
 

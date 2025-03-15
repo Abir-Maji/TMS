@@ -66,7 +66,7 @@ router.post('/register-employee', async (req, res) => {
     await newEmployee.save();
 
     // Insert into `users` collection
-    const newUser = new User({ username, password });
+    const newUser = new User({ name, email, phone, team, username, password });
     await newUser.save();
 
     res.status(201).json({ message: 'Employee registered successfully' });

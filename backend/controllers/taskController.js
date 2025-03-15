@@ -3,10 +3,10 @@ const Task = require('../models/Task');
 // Create a new task
 const createTask = async (req, res) => {
   try {
-    const { title, description, currentDate, deadline, priority, groupName, user } = req.body;
+    const { title, description, currentDate, deadline, priority, team, user } = req.body;
 
     // Validate input data
-    if (!title || !description || !currentDate || !deadline || !priority || !groupName || !user) {
+    if (!title || !description || !currentDate || !deadline || !priority || !team || !user) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
@@ -17,7 +17,7 @@ const createTask = async (req, res) => {
       currentDate,
       deadline,
       priority,
-      groupName,
+      team,
       user,
     });
 
