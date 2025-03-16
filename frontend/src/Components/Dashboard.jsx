@@ -1,119 +1,308 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import TaskList from '../Components/EmployeeDashboardContent/TaskList';
+import DeadlineTracking from '../Components/AdminDashboardContent/DeadlineTracking';
+import ProgressReporting from '../Components/AdminDashboardContent/ProgressReporting';
+import Collaboration from '../Components/AdminDashboardContent/Collaboration';
+import RoleManagement from '../Components/AdminDashboardContent/RoleManagement';
+import RegisterEmployee from '../Components/AdminDashboardContent/RegisterEmployee';
+import ViewEmployees from '../Components/AdminDashboardContent/ViewEmployees';
+import DefaultContent from '../Components/EmployeeDashboardContent/DefaultContent';
+import logo from '../assets/logo.png'; // Adjust the path based on your file location
+
 
 const Dashboard = () => {
-    const navigate = useNavigate();
-    const username = localStorage.getItem('username'); // Retrieve the username
-    const [tasks, setTasks] = useState([]); // State to store tasks
-    const [newTask, setNewTask] = useState(''); // State for new task input
+  const [activeContent, setActiveContent] = useState('default');
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
+  const navigate = useNavigate();
 
-    // Handle logout
-    const handleLogout = () => {
-        localStorage.removeItem('token'); // Clear the token
-        localStorage.removeItem('username'); // Clear the username
-        navigate('/EmployeeLogin'); // Redirect to the login page
-    };
+  // Logout function
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    navigate('/');
+  };
 
-    // Add a new task
-    const handleAddTask = () => {
-        if (newTask.trim() === '') return; // Prevent empty tasks
-        const task = {
-            id: Date.now(), // Unique ID for the task
-            text: newTask,
-            completed: false,
-        };
-        setTasks([...tasks, task]); // Add the new task to the list
-        setNewTask(''); // Clear the input field
-    };
+  // Toggle sidebar expansion
+  const toggleSidebar = () => {
+    setIsSidebarExpanded(!isSidebarExpanded);
+  };
 
-    // Delete a task
-    const handleDeleteTask = (id) => {
-        setTasks(tasks.filter((task) => task.id !== id)); // Remove the task by ID
-    };
+  // Function to determine if a link is active
+  const isActive = (content) => {
+    return activeContent === content;
+  };
 
-    // Toggle task completion status
-    const handleToggleComplete = (id) => {
-        setTasks(
-            tasks.map((task) =>
-                task.id === id ? { ...task, completed: !task.completed } : task
-            )
-        );
-    };
+  // Render content based on activeContent state
+  const renderContent = () => {
+    switch (activeContent) {
+      case 'TaskList':
+        return <TaskList />;
+      case 'deadlineTracking':
+        return <DeadlineTracking />;
+      case 'progressReporting':
+        return <ProgressReporting />;
+      case 'collaboration':
+        return <Collaboration />;
+      case 'roleManagement':
+        return <RoleManagement />;
+      case 'registerEmployee':
+        return <RegisterEmployee />;
+      case 'viewEmployees': // Add case for viewing employees
+        return <ViewEmployees />;
+      default:
+        return <DefaultContent />;
+    }
+  };
 
-    return (
-        <div className="min-h-screen bg-gray-100 p-8">
-            <div className="max-w-4xl mx-auto">
-                {/* Header */}
-                <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-3xl font-bold">Welcome, {username}!</h1>
-                    <button
-                        onClick={handleLogout}
-                        className="bg-red-500 text-white font-bold py-2 px-4 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+  return (
+    <div className="flex">
+      {/* Sidebar */}
+      <div
+        className={`flex h-screen flex-col justify-between border-e border-gray-100 bg-white transition-all duration-300 ${isSidebarExpanded ? 'w-64' : 'w-16'
+          }`}
+      >
+        <div>
+          <div className="inline-flex items-center justify-center">
+            <img
+              src={logo}
+              alt="Logo"
+              className="max-w-9/12 mt-4 rounded-lg" // Adjust size and styling as needed
+            />
+          </div>
+
+          <div className="border-t border-gray-100">
+            <div className="px-2">
+              <div className="py-4">
+                <a
+                  href="#"
+                  onClick={() => setActiveContent('default')}
+                  className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('default') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                    }`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="size-5 opacity-75"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                  {isSidebarExpanded && (
+                    <span className="ml-2 text-sm font-medium">Dashboard</span>
+                  )}
+                </a>
+              </div>
+
+              <ul className="space-y-1 border-t border-gray-100 pt-4">
+                <li>
+                  <a
+                    href="#"
+                    onClick={() => setActiveContent('TaskList')}
+                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('TaskList') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                      }`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="size-5 opacity-75"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
                     >
-                        Logout
-                    </button>
-                </div>
-
-                {/* Add Task Form */}
-                <div className="mb-8">
-                    <div className="flex gap-4">
-                        <input
-                            type="text"
-                            value={newTask}
-                            onChange={(e) => setNewTask(e.target.value)}
-                            placeholder="Add a new task"
-                            className="flex-1 border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        <button
-                            onClick={handleAddTask}
-                            className="bg-blue-500 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
-                        >
-                            Add Task
-                        </button>
-                    </div>
-                </div>
-
-                {/* Task List */}
-                <div className="bg-white rounded-lg shadow-md p-6">
-                    <h2 className="text-2xl font-bold mb-4">Tasks</h2>
-                    {tasks.length === 0 ? (
-                        <p className="text-gray-600">No tasks found. Add a new task above!</p>
-                    ) : (
-                        <ul className="space-y-4">
-                            {tasks.map((task) => (
-                                <li
-                                    key={task.id}
-                                    className="flex items-center justify-between p-4 border border-gray-200 rounded-md"
-                                >
-                                    <div className="flex items-center gap-4">
-                                        <input
-                                            type="checkbox"
-                                            checked={task.completed}
-                                            onChange={() => handleToggleComplete(task.id)}
-                                            className="w-5 h-5 cursor-pointer"
-                                        />
-                                        <span
-                                            className={`text-lg ${
-                                                task.completed ? 'line-through text-gray-400' : 'text-gray-700'
-                                            }`}
-                                        >
-                                            {task.text}
-                                        </span>
-                                    </div>
-                                    <button
-                                        onClick={() => handleDeleteTask(task.id)}
-                                        className="text-red-500 hover:text-red-700 focus:outline-none"
-                                    >
-                                        Delete
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
+                    </svg>
+                    {isSidebarExpanded && (
+                      <span className="ml-2 text-sm font-medium">TasksList</span>
                     )}
-                </div>
+                  </a>
+                </li>
+
+                <li>
+                  <a
+                    href="#"
+                    onClick={() => setActiveContent('deadlineTracking')}
+                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('deadlineTracking') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                      }`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="size-5 opacity-75"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                      />
+                    </svg>
+                    {isSidebarExpanded && (
+                      <span className="ml-2 text-sm font-medium">Deadlines</span>
+                    )}
+                  </a>
+                </li>
+
+                <li>
+                  <a
+                    href="#"
+                    onClick={() => setActiveContent('progressReporting')}
+                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('progressReporting') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                      }`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="size-5 opacity-75"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                      />
+                    </svg>
+                    {isSidebarExpanded && (
+                      <span className="ml-2 text-sm font-medium">Progress</span>
+                    )}
+                  </a>
+                </li>
+
+                <li>
+                  <a
+                    href="#"
+                    onClick={() => setActiveContent('collaboration')}
+                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('collaboration') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                      }`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="size-5 opacity-75"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
+                    {isSidebarExpanded && (
+                      <span className="ml-2 text-sm font-medium">Collaboration</span>
+                    )}
+                  </a>
+                </li>
+
+                <li>
+                  <a
+                    href="#"
+                    onClick={() => setActiveContent('registerEmployee')}
+                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('registerEmployee') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                      }`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="size-5 opacity-75"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                      />
+                    </svg>
+                    {isSidebarExpanded && (
+                      <span className="ml-2 text-sm font-medium">Register Employee</span>
+                    )}
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    onClick={() => setActiveContent('viewEmployees')}
+                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('viewEmployees') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                      }`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="size-5 opacity-75"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
+                    </svg>
+                    {isSidebarExpanded && (
+                      <span className="ml-2 text-sm font-medium">View Employees</span>
+                    )}
+                  </a>
+                </li>
+              </ul>
             </div>
+          </div>
         </div>
-    );
+
+        {/* Logout Button */}
+        <div className="sticky inset-x-0 bottom-0 border-t border-gray-100 bg-white p-2">
+          <button
+            onClick={handleLogout}
+            className="group relative flex w-full justify-center rounded-lg px-2 py-1.5 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="size-5 opacity-75"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
+            </svg>
+            {isSidebarExpanded && (
+              <span className="ml-2 text-sm font-medium">Logout</span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 p-6 bg-gray-100">
+        {renderContent()}
+      </div>
+    </div>
+  );
 };
 
 export default Dashboard;

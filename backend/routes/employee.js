@@ -42,7 +42,7 @@
 const express = require('express');
 const router = express.Router();
 const Employee = require('../models/Employee');
-const User = require('../models/User'); // Import User model
+// const User = require('../models/User'); // Import User model
 
 router.post('/register-employee', async (req, res) => {
   try {
@@ -66,8 +66,8 @@ router.post('/register-employee', async (req, res) => {
     await newEmployee.save();
 
     // Insert into `users` collection
-    const newUser = new User({ name, email, phone, team, username, password });
-    await newUser.save();
+    // const newUser = new User({ name, email, phone, team, username, password });
+    // await newUser.save();
 
     res.status(201).json({ message: 'Employee registered successfully' });
   } catch (error) {

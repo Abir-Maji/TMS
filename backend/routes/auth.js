@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+// const User = require('../models/User');
 const Admin = require('../models/Admin');
 const Employee = require('../models/Employee');
 
@@ -45,29 +45,45 @@ router.post('/register-employee', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
 // Login route (plain text password comparison)
 router.post('/login', async (req, res) => {
-  try {
-    const { username, password } = req.body;
+  const { username, password } = req.body;
 
+  try {
+    // Validate input
     if (!username || !password) {
       return res.status(400).json({ message: 'Username and password are required' });
     }
 
-    const user = await User.findOne({ username });
+    // Find the employee by username
+    const employee = await Employee.findOne({ username });
 
-    if (!user) {
+    if (!employee) {
       return res.status(401).json({ message: 'Invalid username or password' });
     }
 
     // Compare plain text passwords (UNSAFE)
-    if (password !== user.password) {
+    if (password !== employee.password) {
       return res.status(401).json({ message: 'Invalid username or password' });
     }
 
     // Generate JWT token
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.json({ token });
+    const token = jwt.sign(
+      {
+        userId: employee._id,
+        username: employee.username,
+        role: employee.role,
+        team: employee.team,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    // Return the token and employee data (excluding the password)
+    const employeeData = { ...employee.toObject() };
+    delete employeeData.password; // Remove the password from the response
+    res.json({ token, employee: employeeData });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Internal server error' });
