@@ -44,7 +44,8 @@ const EmployeeLogin = () => {
 
             const data = await response.json();
             localStorage.setItem('token', data.token);
-            localStorage.setItem('username', username);
+            localStorage.setItem('username', data.employee.username);
+            localStorage.setItem('team', data.employee.team)
             navigate('/dashboard');
         } catch (err) {
             console.error('Login Error:', err);

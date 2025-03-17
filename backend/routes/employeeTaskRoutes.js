@@ -1,21 +1,10 @@
 const express = require('express');
-const { getTasks, addTask, updateTask, deleteTask, getTasksByEmployeeTeam } = require('../controllers/employeeTaskController');
+const { getTasksByEmployeeTeam } = require('../controllers/employeeTaskController');
+const authMiddleware = require('../middleware/authMiddleware'); // Ensure the employee is authenticated
 
 const router = express.Router();
 
-// GET /employee/tasks - Fetch all tasks
-router.get('/', getTasks);
-
-// POST /employee/tasks - Add a new task
-router.post('/', addTask);
-
-// GET /employee/tasks/:employeeId - Fetch tasks for an employee's team
-router.get('/:employeeId', getTasksByEmployeeTeam);
-
-// PUT /employee/tasks/:id - Update a task
-router.put('/:id', updateTask);
-
-// DELETE /employee/tasks/:id - Delete a task
-router.delete('/:id', deleteTask);
+// GET /api/employee/tasks - Fetch tasks for the logged-in employee's team
+router.get('/', authMiddleware, getTasksByEmployeeTeam);
 
 module.exports = router;

@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TaskList from '../Components/EmployeeDashboardContent/TaskList';
-import DeadlineTracking from '../Components/AdminDashboardContent/DeadlineTracking';
+import EmployeeDetails from './EmployeeDashboardContent/EmployeeDetails';
 import ProgressReporting from '../Components/AdminDashboardContent/ProgressReporting';
 import Collaboration from '../Components/AdminDashboardContent/Collaboration';
 import RoleManagement from '../Components/AdminDashboardContent/RoleManagement';
-import RegisterEmployee from '../Components/AdminDashboardContent/RegisterEmployee';
-import ViewEmployees from '../Components/AdminDashboardContent/ViewEmployees';
 import DefaultContent from '../Components/EmployeeDashboardContent/DefaultContent';
 import logo from '../assets/logo.png'; // Adjust the path based on your file location
 
@@ -37,18 +35,15 @@ const Dashboard = () => {
     switch (activeContent) {
       case 'TaskList':
         return <TaskList />;
-      case 'deadlineTracking':
-        return <DeadlineTracking />;
+
       case 'progressReporting':
         return <ProgressReporting />;
       case 'collaboration':
         return <Collaboration />;
       case 'roleManagement':
         return <RoleManagement />;
-      case 'registerEmployee':
-        return <RegisterEmployee />;
-      case 'viewEmployees': // Add case for viewing employees
-        return <ViewEmployees />;
+      case 'EmployeeDetails': // Add case for viewing employees
+        return <EmployeeDetails />;
       default:
         return <DefaultContent />;
     }
@@ -132,32 +127,7 @@ const Dashboard = () => {
                   </a>
                 </li>
 
-                <li>
-                  <a
-                    href="#"
-                    onClick={() => setActiveContent('deadlineTracking')}
-                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('deadlineTracking') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                      }`}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="size-5 opacity-75"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                      />
-                    </svg>
-                    {isSidebarExpanded && (
-                      <span className="ml-2 text-sm font-medium">Deadlines</span>
-                    )}
-                  </a>
-                </li>
+
 
                 <li>
                   <a
@@ -216,34 +186,8 @@ const Dashboard = () => {
                 <li>
                   <a
                     href="#"
-                    onClick={() => setActiveContent('registerEmployee')}
-                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('registerEmployee') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                      }`}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="size-5 opacity-75"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                      />
-                    </svg>
-                    {isSidebarExpanded && (
-                      <span className="ml-2 text-sm font-medium">Register Employee</span>
-                    )}
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    onClick={() => setActiveContent('viewEmployees')}
-                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('viewEmployees') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                    onClick={() => setActiveContent('EmployeeDetails')}
+                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('EmployeeDetails') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
                       }`}
                   >
                     <svg
@@ -261,7 +205,7 @@ const Dashboard = () => {
                       />
                     </svg>
                     {isSidebarExpanded && (
-                      <span className="ml-2 text-sm font-medium">View Employees</span>
+                      <span className="ml-2 text-sm font-medium">View Profile</span>
                     )}
                   </a>
                 </li>

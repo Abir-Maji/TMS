@@ -63,7 +63,7 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid username or password' });
     }
 
-    // Compare plain text passwords (UNSAFE)
+    // Compare plain text passwords (UNSAFE - use bcrypt in production)
     if (password !== employee.password) {
       return res.status(401).json({ message: 'Invalid username or password' });
     }
@@ -74,7 +74,7 @@ router.post('/login', async (req, res) => {
         userId: employee._id,
         username: employee.username,
         role: employee.role,
-        team: employee.team,
+        team: employee.team, // Include the team in the token payload
       },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }

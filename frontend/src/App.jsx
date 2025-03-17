@@ -6,6 +6,7 @@ import Dashboard from './Components/Dashboard'; // Import Dashboard
 import ErrorBoundary from './ErrorBoundary.jsx';
 import AdminLogin from './Pages/AdminLogin.jsx';
 import AdminDashboard from './Components/AdminDashboard.jsx'; // Import Admin Dashboard
+import EmployeeDetails from './Components/EmployeeDashboardContent/EmployeeDetails'; // Import View Profile
 
 const App = () => {
   // Check if the user is authenticated
@@ -25,6 +26,8 @@ const App = () => {
             </ErrorBoundary>
           }
         />
+        <Route path="/employee/:id" element={<EmployeeDetails />} /> {/* Route for employee details by ID */}
+        <Route path="/employee/username/:username" element={<EmployeeDetails />} />
         <Route path="/AdminLogin" element={<AdminLogin />} />
 
         {/* Protected Route - Only accessible if authenticated */}
