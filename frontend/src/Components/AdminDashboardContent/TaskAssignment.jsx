@@ -9,13 +9,18 @@ const TaskAssignment = () => {
     priority: 'medium',
     team: '',
     user: '',
+    progress: 0, // Add progress field
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    // Convert to uppercase if the field is 'team'
+    const updatedValue = name === 'team' ? value.toUpperCase() : value;
+
     setFormData({
       ...formData,
-      [name]: value,
+      [name]: updatedValue,
     });
   };
 
@@ -58,6 +63,7 @@ const TaskAssignment = () => {
         priority: 'medium',
         team: '',
         user: '',
+        progress: 0,
       });
     } catch (error) {
       console.error('Error submitting task:', error);
@@ -184,6 +190,22 @@ const TaskAssignment = () => {
               onChange={handleChange}
               className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
               placeholder="Enter user name"
+              required
+            />
+          </div>
+
+          {/* Progress (Hidden) */}
+          <div>
+            <input
+              type="number"
+              id="progress"
+              name="progress"
+              value={formData.progress}
+              onChange={handleChange}
+              className="hidden"
+              placeholder="Enter progress (0-100)"
+              min="0"
+              max="100"
               required
             />
           </div>
