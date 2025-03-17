@@ -69,7 +69,7 @@ function LandingPage() {
                         </Link>
 
                         <Link to="/AdminLogin" className="bg-indigo-600 !text-white px-6 py-3 rounded-md hover:bg-indigo-700 transition duration-300 text-xl font-medium">Admin Login</Link>
-                        <Link to="/ManagerLogin" className="bg-indigo-600 !text-white px-6 py-3 rounded-md hover:bg-indigo-700 transition duration-300 text-xl font-medium">Manager Login</Link>
+                        {/* <Link to="/ManagerLogin" className="bg-indigo-600 !text-white px-6 py-3 rounded-md hover:bg-indigo-700 transition duration-300 text-xl font-medium">Manager Login</Link> */}
                     </div>
                 </div>
             </section>

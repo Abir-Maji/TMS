@@ -2,16 +2,16 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './Components/LandingPage';
 import EmployeeLogin from './Pages/EmployeeLogin';
-import Dashboard from './Components/Dashboard'; // Import Dashboard
+import Dashboard from './Components/Dashboard'; 
 import ErrorBoundary from './ErrorBoundary.jsx';
 import AdminLogin from './Pages/AdminLogin.jsx';
-import AdminDashboard from './Components/AdminDashboard.jsx'; // Import Admin Dashboard
-import EmployeeDetails from './Components/EmployeeDashboardContent/EmployeeDetails'; // Import View Profile
+import AdminDashboard from './Components/AdminDashboard.jsx'; 
+import EmployeeDetails from './Components/EmployeeDashboardContent/EmployeeDetails'; 
 
 const App = () => {
-  // Check if the user is authenticated
   const isAuthenticated = !!localStorage.getItem('token');
-  const role = localStorage.getItem('role'); // Get the user's role
+  const role = localStorage.getItem('role'); 
+  const username = localStorage.getItem('username'); 
 
   return (
     <Router>
@@ -26,44 +26,28 @@ const App = () => {
             </ErrorBoundary>
           }
         />
-        <Route path="/employee/:id" element={<EmployeeDetails />} /> {/* Route for employee details by ID */}
-        <Route path="/employee/username/:username" element={<EmployeeDetails />} />
         <Route path="/AdminLogin" element={<AdminLogin />} />
 
-        {/* Protected Route - Only accessible if authenticated */}
+        {/* Employee Details Page - Accessible via URL */}
+        <Route path="/employee/:username" element={<EmployeeDetails />} />
+
+        {/* Protected Routes */}
         <Route
           path="/dashboard"
-          element={
-            isAuthenticated ? (
-              <Dashboard />
-            ) : (
-              <Navigate to="/EmployeeLogin" replace />
-            )
-          }
+          element={isAuthenticated ? <Dashboard /> : <Navigate to="/EmployeeLogin" replace />}
         />
 
-        {/* Admin Dashboard Route - Only accessible if authenticated and role is admin */}
         <Route
           path="/admin/dashboard"
-          element={
-            isAuthenticated && role === 'admin' ? (
-              <AdminDashboard />
-            ) : (
-              <Navigate to="/AdminLogin" replace />
-            )
-          }
+          element={isAuthenticated && role === 'admin' ? <AdminDashboard /> : <Navigate to="/AdminLogin" replace />}
         />
 
-        {/* Fallback Route - Redirect to Login if no matching route */}
+        {/* Fallback Route */}
         <Route
           path="*"
           element={
             isAuthenticated ? (
-              role === 'admin' ? (
-                <Navigate to="/admin/dashboard" replace />
-              ) : (
-                <Navigate to="/dashboard" replace />
-              )
+              role === 'admin' ? <Navigate to="/admin/dashboard" replace /> : <Navigate to="/dashboard" replace />
             ) : (
               <Navigate to="/EmployeeLogin" replace />
             )

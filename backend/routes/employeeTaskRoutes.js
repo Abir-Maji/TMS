@@ -1,10 +1,18 @@
 const express = require('express');
-const { getTasksByEmployeeTeam } = require('../controllers/employeeTaskController');
-const authMiddleware = require('../middleware/authMiddleware'); // Ensure the employee is authenticated
-
 const router = express.Router();
+const Employee = require('../models/Employee');
 
-// GET /api/employee/tasks - Fetch tasks for the logged-in employee's team
-router.get('/', authMiddleware, getTasksByEmployeeTeam);
+// Fetch employee details by username
+router.get('/:username', async (req, res) => {
+  try {
+    const employee = await Employee.findOne({ username: req.params.username });
+    if (!employee) {
+      return res.status(404).json({ message: 'Employee not found' });
+    }
+    res.json(employee);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
 
 module.exports = router;

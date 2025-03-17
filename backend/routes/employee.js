@@ -55,9 +55,8 @@ router.post('/register-employee', async (req, res) => {
 
     // Check if employee or user already exists
     const existingEmployee = await Employee.findOne({ email });
-    const existingUser = await User.findOne({ username });
-
-    if (existingEmployee || existingUser) {
+   
+    if (existingEmployee) {
       return res.status(409).json({ message: 'Employee or username already exists' });
     }
 
