@@ -10,7 +10,7 @@ function LandingPage() {
                 <div className="container mx-auto px-6 py-4 flex justify-between items-center">
                     <Link to="/" className="flex items-center">
                         <img src={logo} alt="Logo" className="h-10" />
-                        <span className="ml-3 text-xl font-bold text-gray-800">Task Management</span>
+                        {/* <span className="ml-3 text-xl font-bold text-gray-800">Task Management</span> */}
                     </Link>
                     <div className="flex space-x-6">
                         <Link to="/EmployeeLogin" className="text-gray-800 hover:text-blue-600 transition duration-300">
