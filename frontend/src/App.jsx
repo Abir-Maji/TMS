@@ -6,12 +6,12 @@ import Dashboard from './Components/Dashboard';
 import ErrorBoundary from './ErrorBoundary.jsx';
 import AdminLogin from './Pages/AdminLogin.jsx';
 import AdminDashboard from './Components/AdminDashboard.jsx'; 
-import EmployeeDetails from './Components/EmployeeDashboardContent/EmployeeDetails'; 
+import EmployeeDetails from './Components/EmployeeDashboardContent/EmployeeDetails';
+ 
 
 const App = () => {
   const isAuthenticated = !!localStorage.getItem('token');
   const role = localStorage.getItem('role'); 
-  const username = localStorage.getItem('username'); 
 
   return (
     <Router>

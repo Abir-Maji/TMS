@@ -48,6 +48,7 @@ const taskRoutes = require('./routes/taskRoutes');
 const employeeRoutes = require('./routes/employeeController');
 const employeeTaskRoutes = require('./routes/employeeTaskRoutes');
 const employeeRoutess = require('./routes/employeeRoutes');
+const collaboratorsRoutes = require("./routes/collaborators");
 
 dotenv.config();
 
@@ -71,7 +72,7 @@ app.use('/tasks', taskRoutes);
 app.use('/employee', employeeRoutes);
 app.use('/api/employee/tasks', employeeTaskRoutes);
 app.use('/api/employee', employeeRoutess);
-
+app.use("/api/collaborators", collaboratorsRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error('Server Error:', err.stack);
