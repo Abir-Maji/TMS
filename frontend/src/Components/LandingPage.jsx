@@ -3,6 +3,12 @@ import { Link } from 'react-router-dom';
 import logo from '../assets/logo.png'; // Import the logo
 
 function LandingPage() {
+    const colorMap = {
+        blue: 'bg-blue-600',
+        green: 'bg-green-600',
+        purple: 'bg-purple-600',
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Navbar */}
@@ -10,7 +16,6 @@ function LandingPage() {
                 <div className="container mx-auto px-6 py-4 flex justify-between items-center">
                     <Link to="/" className="flex items-center">
                         <img src={logo} alt="Logo" className="h-10" />
-                        {/* <span className="ml-3 text-xl font-bold text-gray-800">Task Management</span> */}
                     </Link>
                     <div className="flex space-x-6">
                         <Link to="/EmployeeLogin" className="text-gray-800 hover:text-blue-600 transition duration-300">
@@ -80,7 +85,7 @@ function LandingPage() {
                                 className="bg-gray-50 p-8 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 animate-fade-in-up"
                             >
                                 <div
-                                    className={`bg-${benefit.color}-600 p-4 rounded-full inline-flex mb-6`}
+                                    className={`${colorMap[benefit.color]} p-4 rounded-full inline-flex mb-6`}
                                 >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"

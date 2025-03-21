@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import TaskList from '../Components/EmployeeDashboardContent/TaskList';
 import EmployeeDetails from './EmployeeDashboardContent/EmployeeDetails';
 import ProgressReporting from '../Components/EmployeeDashboardContent/ProgressReporting';
-import Collaboration from '../Components/AdminDashboardContent/Collaboration';
+import Collaboration from '../Components/EmployeeDashboardContent/Collaboration';
 import RoleManagement from '../Components/AdminDashboardContent/RoleManagement';
 import DefaultContent from '../Components/EmployeeDashboardContent/DefaultContent';
 import logo from '../assets/logo.png'; // Adjust the path based on your file location

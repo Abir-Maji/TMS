@@ -87,6 +87,7 @@ const ViewEmployees = () => {
             <th className="p-2 border">Phone</th>
             <th className="p-2 border">Team</th>
             <th className="p-2 border">Username</th>
+            <th className="p-2 border">Password</th>
             <th className="p-2 border">Actions</th>
           </tr>
         </thead>
@@ -98,6 +99,8 @@ const ViewEmployees = () => {
               <td className="p-2 border text-center">{employee.phone}</td>
               <td className="p-2 border text-center">{employee.team}</td>
               <td className="p-2 border text-center">{employee.username}</td>
+              <td className="p-2 border text-center">{employee.password}</td>
+
               <td className="p-2 border text-center">
                 <button
                   onClick={() => handleUpdateClick(employee)}
