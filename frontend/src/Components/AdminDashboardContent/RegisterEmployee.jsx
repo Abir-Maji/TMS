@@ -67,6 +67,7 @@ const RegisterEmployee = () => {
           name="team"
           placeholder="Employee Team Number"
           className="border rounded px-3 py-2 mb-2 w-full"
+          onChange={(e) => e.target.value = e.target.value.toUpperCase()}
           required
         />
         <input
