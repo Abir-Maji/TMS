@@ -12,7 +12,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// ✅ FIXED UPDATE ROUTE (Remove "collaborators/" in the path)
+// UPDATE ROUTE 
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -35,5 +35,23 @@ router.put("/:id", async (req, res) => {
     res.status(500).json({ message: "Server error", error });
   }
 });
+
+
+//EMP
+router.get('/employee/collaborators', async (req, res) => {
+  const { username } = req.query;
+  if (!username) {
+      return res.status(400).json({ error: "Username is required" });
+  }
+
+  try {
+      const collaborators = await CollaboratorModel.find({ assignedTo: username });
+      res.json(collaborators);
+  } catch (error) {
+      res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
 
 module.exports = router;
