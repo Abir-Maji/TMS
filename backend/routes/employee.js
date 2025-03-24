@@ -43,7 +43,7 @@ router.post('/register-employee', async (req, res) => {
             {
                 $setOnInsert: {  // Only set these fields if a new document is inserted
                     name: name,
-                    message: `Welcome ${name}`, // Or leave it undefined
+                    message: `Welcome ${username}`, // Or leave it undefined
                 },
             },
             { upsert: true } // Options:  If no document matches, insert a new one

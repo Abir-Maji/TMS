@@ -17,10 +17,11 @@ const TaskList = () => {
         throw new Error('No team found in localStorage. Please log in again.');
       }
 
-      console.log('Fetching tasks for team:', team); // Log the team being fetched
+      // console.log('Fetching tasks for team:', team); // Log the team being fetched
 
       // Fetch tasks from the backend
       const response = await fetch(`http://localhost:5000/api/employee/tasks/by-team?team=${team.trim()}`);
+      console.log("res",response);
 
       if (!response.ok) {
         const errorData = await response.json();

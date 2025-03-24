@@ -12,7 +12,7 @@ const Collaboration = () => {
 
   const fetchCollaborators = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/collaborators"); // Update if needed
+      const response = await fetch("http://localhost:5000/api/admin/collaborators");
       const data = await response.json();
       setCollaborators(data);
     } catch (error) {
@@ -28,30 +28,29 @@ const Collaboration = () => {
 
   const handleUpdateMessage = async (id) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/collaborators/${id}`, {
+      const response = await fetch(`http://localhost:5000/api/admin/collaborators/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ message: updatedMessage }),
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         console.error("Error response from server:", errorData);
         throw new Error(errorData.message || "Failed to update message");
       }
-  
+
       const updatedCollaborator = await response.json();
       console.log("Updated collaborator:", updatedCollaborator);
-  
+
       fetchCollaborators(); // Refresh list after update
       setEditingId(null);
     } catch (error) {
       console.error("Error updating message:", error);
     }
   };
-  
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">

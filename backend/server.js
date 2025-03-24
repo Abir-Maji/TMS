@@ -45,10 +45,15 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db'); 
 const taskRoutes = require('./routes/taskRoutes');
-const employeeRoutes = require('./routes/employeeController');
+const employeeController = require('./routes/employeeController');
 const employeeTaskRoutes = require('./routes/employeeTaskRoutes');
 const employeeRoutess = require('./routes/employeeRoutes');
-const collaboratorsRoutes = require("./routes/collaborators");
+
+const adminCollaboratorsRoutes = require('./routes/admincollaborators');
+const employeeCollaboratorsRoutes = require('./routes/employeecollaborators');
+
+
+const employeeRoutes = require('./routes/employee');
 
 dotenv.config();
 
@@ -69,15 +74,25 @@ const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
 app.use('/employee', require('./routes/employee'));
 app.use('/tasks', taskRoutes);
-app.use('/employee', employeeRoutes);
+app.use('/employee', employeeController);
 app.use('/api/employee/tasks', employeeTaskRoutes);
 app.use('/api/employee', employeeRoutess);
-app.use("/api/collaborators", collaboratorsRoutes);
+app.use('/api/admin', adminCollaboratorsRoutes); 
+app.use('/api', employeeCollaboratorsRoutes);
+
+
+app.use('/api/employee', employeeRoutes);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error('Server Error:', err.stack);
-    res.status(500).json({ message: 'Internal Server Error' });
-});
+    console.error('Unhandled error:', err);
+    res.status(500).json({ message: 'Internal server error', error: err.message });
+  });
+
+  app.use((req, res) => {
+    res.status(404).json({ message: 'Route not found' });
+  });
+  
 
 // Start server
 const PORT = process.env.PORT || 5000;

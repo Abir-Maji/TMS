@@ -30,6 +30,8 @@ const authMiddleware = (req, res, next) => {
     req.user = decoded.userId; // Attach user ID to the request
     req.role = decoded.role; // Attach role to the request
     req.team = decoded.team; // Attach team to the request
+    req.username = decoded.username; // Attach username to the request
+    
     next();
   } catch (error) {
     res.status(401).json({ message: 'Invalid token' });
