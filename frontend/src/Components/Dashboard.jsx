@@ -6,244 +6,210 @@ import ProgressReporting from '../Components/EmployeeDashboardContent/ProgressRe
 import Collaboration from '../Components/EmployeeDashboardContent/Collaboration';
 import RoleManagement from '../Components/AdminDashboardContent/RoleManagement';
 import DefaultContent from '../Components/EmployeeDashboardContent/DefaultContent';
-import logo from '../assets/logo.png'; // Adjust the path based on your file location
-
+import logo from '../assets/logo1.png';
 
 const Dashboard = () => {
+  const username = localStorage.getItem('username');
+
   const [activeContent, setActiveContent] = useState('default');
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const navigate = useNavigate();
 
-  // Logout function
   const handleLogout = () => {
     localStorage.removeItem('authToken');
     navigate('/');
   };
 
-  // Toggle sidebar expansion
   const toggleSidebar = () => {
     setIsSidebarExpanded(!isSidebarExpanded);
   };
 
-  // Function to determine if a link is active
-  const isActive = (content) => {
-    return activeContent === content;
-  };
+  const sidebarItems = [
+    {
+      id: 'default',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+      ),
+      label: 'Dashboard'
+    },
+    {
+      id: 'TaskList',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+      ),
+      label: 'Tasks'
+    },
+    {
+      id: 'progressReporting',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+        </svg>
+      ),
+      label: 'Progress'
+    },
+    {
+      id: 'collaboration',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+      ),
+      label: 'Collaboration'
+    },
+    {
+      id: 'EmployeeDetails',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      ),
+      label: 'Profile'
+    }
+  ];
 
-  // Render content based on activeContent state
   const renderContent = () => {
     switch (activeContent) {
-      case 'TaskList':
-        return <TaskList />;
-
-      case 'progressReporting':
-        return <ProgressReporting />;
-      case 'collaboration':
-        return <Collaboration />;
-      case 'roleManagement':
-        return <RoleManagement />;
-      case 'EmployeeDetails': // Add case for viewing employees
-        return <EmployeeDetails />;
-      default:
-        return <DefaultContent />;
+      case 'TaskList': return <TaskList />;
+      case 'progressReporting': return <ProgressReporting />;
+      case 'collaboration': return <Collaboration />;
+      case 'roleManagement': return <RoleManagement />;
+      case 'EmployeeDetails': return <EmployeeDetails />;
+      default: return <DefaultContent />;
     }
   };
 
   return (
-    <div className="flex">
-      {/* Sidebar */}
-      <div
-        className={`flex h-screen flex-col justify-between border-e border-gray-100 bg-white transition-all duration-300 ${isSidebarExpanded ? 'w-64' : 'w-16'
-          }`}
-      >
-        <div>
-          <div className="inline-flex items-center justify-center">
-            <img
-              src={logo}
-              alt="Logo"
-              className="max-w-9/12 mt-4 rounded-lg" // Adjust size and styling as needed
-            />
-          </div>
-
-          <div className="border-t border-gray-100">
-            <div className="px-2">
-              <div className="py-4">
-                <a
-                  href="#"
-                  onClick={() => setActiveContent('default')}
-                  className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('default') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                    }`}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="size-5 opacity-75"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
-                  {isSidebarExpanded && (
-                    <span className="ml-2 text-sm font-medium">Dashboard</span>
-                  )}
-                </a>
-              </div>
-
-              <ul className="space-y-1 border-t border-gray-100 pt-4">
-                <li>
-                  <a
-                    href="#"
-                    onClick={() => setActiveContent('TaskList')}
-                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('TaskList') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                      }`}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="size-5 opacity-75"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                    {isSidebarExpanded && (
-                      <span className="ml-2 text-sm font-medium">TasksList</span>
-                    )}
-                  </a>
-                </li>
-
-
-
-                <li>
-                  <a
-                    href="#"
-                    onClick={() => setActiveContent('progressReporting')}
-                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('progressReporting') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                      }`}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="size-5 opacity-75"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                      />
-                    </svg>
-                    {isSidebarExpanded && (
-                      <span className="ml-2 text-sm font-medium">Progress</span>
-                    )}
-                  </a>
-                </li>
-
-                <li>
-                  <a
-                    href="#"
-                    onClick={() => setActiveContent('collaboration')}
-                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('collaboration') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                      }`}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="size-5 opacity-75"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
-                    {isSidebarExpanded && (
-                      <span className="ml-2 text-sm font-medium">Collaboration</span>
-                    )}
-                  </a>
-                </li>
-
-                <li>
-                  <a
-                    href="#"
-                    onClick={() => setActiveContent('EmployeeDetails')}
-                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('EmployeeDetails') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                      }`}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="size-5 opacity-75"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                    {isSidebarExpanded && (
-                      <span className="ml-2 text-sm font-medium">View Profile</span>
-                    )}
-                  </a>
-                </li>
-              </ul>
+    <div className="flex h-screen bg-[#f8fafc]">
+      {/* Sidebar inspired by finance dashboard */}
+      <div className={`flex flex-col h-full bg-white transition-all duration-300 shadow-lg ${isSidebarExpanded ? 'w-72' : 'w-20'}`}>
+        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          {isSidebarExpanded ? (
+            <div className="flex items-center space-x-3">
+              <img src={logo} alt="Logo" className="h-8" />
+              <span className="text-xl font-semibold text-gray-800">TaskHub</span>
             </div>
-          </div>
+          ) : (
+            <></>
+          )}
+          <button
+            onClick={toggleSidebar}
+            className="p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors"
+          >
+            {isSidebarExpanded ? (
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            )}
+          </button>
         </div>
 
-        {/* Logout Button */}
-        <div className="sticky inset-x-0 bottom-0 border-t border-gray-100 bg-white p-2">
+        <nav className="flex-1 p-4 overflow-y-auto">
+          <ul className="space-y-2">
+            {sidebarItems.map((item) => (
+              <li key={item.id}>
+                <button
+                  onClick={() => setActiveContent(item.id)}
+                  className={`flex items-center w-full p-4 rounded-xl transition-colors ${activeContent === item.id ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}`}
+                >
+                  <span className={`flex items-center justify-center ${activeContent === item.id ? 'text-blue-600' : 'text-gray-500'}`}>
+                    {item.icon}
+                  </span>
+                  {isSidebarExpanded && (
+                    <span className="ml-4 font-medium">{item.label}</span>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <div className="p-4 border-t border-gray-100">
           <button
             onClick={handleLogout}
-            className="group relative flex w-full justify-center rounded-lg px-2 py-1.5 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+            className="flex items-center w-full p-4 rounded-xl text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="size-5 opacity-75"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-              />
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
             </svg>
             {isSidebarExpanded && (
-              <span className="ml-2 text-sm font-medium">Logout</span>
+              <span className="ml-4 font-medium">Logout</span>
             )}
           </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-6 bg-gray-100">
-        {renderContent()}
+      <div className="flex-1 overflow-auto">
+        <div className="p-8">
+          {/* Header with rounded corners and shadow */}
+          <div className="mb-8 flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm">
+            <h1 className="text-2xl font-bold text-gray-800">
+              {activeContent === 'default' && 'Dashboard Overview'}
+              {activeContent === 'TaskList' && 'Task Management'}
+              {activeContent === 'progressReporting' && 'Progress Reports'}
+              {activeContent === 'collaboration' && 'Team Collaboration'}
+              {activeContent === 'EmployeeDetails' && 'My Profile'}
+            </h1>
+            <div className="flex items-center space-x-4">
+              {/* <div className="relative">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  className="pl-10 pr-4 py-2 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div> */}
+              <button className="p-2 rounded-xl bg-white shadow-sm hover:bg-gray-50 text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+              </button>
+              <div className="flex items-center space-x-3">
+                <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold shadow-sm">
+                  AD
+                </div>
+                {isSidebarExpanded && (
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-700">{username}</p>
+                    {/* <p className="text-xs text-gray-500">Admin</p> */}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Content area with rounded corners */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm">
+            {renderContent()}
+          </div>
+        </div>
       </div>
     </div>
   );
