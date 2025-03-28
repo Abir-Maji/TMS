@@ -12,7 +12,7 @@ const ViewEmployees = () => {
   const fetchEmployees = async () => {
     try {
       const response = await fetch(
-        "http://localhost:5000/employee/get-all-employees"
+        "http://localhost:5000/api/employee/get-all-employees"
       );
       if (response.ok) {
         const data = await response.json();
@@ -38,7 +38,7 @@ const ViewEmployees = () => {
   const handleUpdateEmployee = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/employee/update-employee/${selectedEmployee._id}`,
+        `http://localhost:5000/api/employee/update-employee/${selectedEmployee._id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -61,7 +61,7 @@ const ViewEmployees = () => {
   const handleDeleteEmployee = async (id) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/employee/delete-employee/${id}`,
+        `http://localhost:5000/api/employee/delete-employee/${id}`,
         { method: "DELETE" }
       );
 

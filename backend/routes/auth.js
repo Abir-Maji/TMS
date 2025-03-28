@@ -47,25 +47,35 @@ router.post('/register-employee', async (req, res) => {
 });
 
 // Login route (plain text password comparison)
+
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
   try {
     // Validate input
     if (!username || !password) {
-      return res.status(400).json({ message: 'Username and password are required' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Username and password are required' 
+      });
     }
 
     // Find the employee by username
     const employee = await Employee.findOne({ username });
-
+    
     if (!employee) {
-      return res.status(401).json({ message: 'Invalid username or password' });
+      return res.status(401).json({ 
+        success: false,
+        message: 'Invalid credentials' // Generic message
+      });
     }
 
-    // Compare plain text passwords (UNSAFE - use bcrypt in production)
+    // WARNING: Plain text password comparison (not recommended for production)
     if (password !== employee.password) {
-      return res.status(401).json({ message: 'Invalid username or password' });
+      return res.status(401).json({ 
+        success: false,
+        message: 'Invalid credentials' 
+      });
     }
 
     // Generate JWT token
@@ -74,22 +84,41 @@ router.post('/login', async (req, res) => {
         userId: employee._id,
         username: employee.username,
         role: employee.role,
-        team: employee.team, // Include the team in the token payload
+        team: employee.team,
+        name: employee.name
       },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      { 
+        expiresIn: '8h'
+      }
     );
 
-    // Return the token and employee data (excluding the password)
-    const employeeData = { ...employee.toObject() };
-    delete employeeData.password; // Remove the password from the response
-    res.json({ token, employee: employeeData });
+    // Return response without setting HTTP-only cookie
+    const userData = {
+      _id: employee._id,
+      name: employee.name,
+      username: employee.username,
+      email: employee.email,
+      phone: employee.phone,
+      team: employee.team,
+      role: employee.role
+    };
+
+    res.status(200).json({ 
+      success: true,
+      message: 'Login successful',
+      user: userData,
+      token
+    });
+
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ 
+      success: false,
+      message: 'An error occurred during login' 
+    });
   }
 });
-
 // Admin Login route (plain text password comparison)
 router.post('/admin/login', async (req, res) => {
   try {

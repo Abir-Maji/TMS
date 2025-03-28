@@ -30,6 +30,7 @@ const App = () => {
 
         {/* Employee Details Page - Accessible via URL */}
         <Route path="/employee/:username" element={<EmployeeDetails />} />
+        <Route path="/employee/:id" element={<EmployeeDetails />} />
 
         {/* Protected Routes */}
         <Route

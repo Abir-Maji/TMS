@@ -74,7 +74,7 @@ const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
 app.use('/employee', require('./routes/employee'));
 app.use('/tasks', taskRoutes);
-app.use('/employee', employeeController);
+app.use('/api/employee', employeeController);
 app.use('/api/employee/tasks', employeeTaskRoutes);
 app.use('/api/employee', employeeRoutess);
 app.use('/api/admin', adminCollaboratorsRoutes); 

@@ -6,10 +6,14 @@ const EmployeeLogin = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsLoading(true);
+        setError(null);
+
         try {
             const response = await fetch('http://127.0.0.1:5000/api/auth/login', {
                 method: 'POST',
@@ -17,43 +21,37 @@ const EmployeeLogin = () => {
                 body: JSON.stringify({ username, password }),
             });
 
+            const responseData = await response.json();
+            
             if (!response.ok) {
-                if (response.status === 401) {
-                    setError('Invalid username or password.');
-                } else if (response.status === 404) {
-                    setError('Endpoint not found.');
-                } else if (response.status === 500) {
-                    setError('Server error. Please try again later.');
-                } else {
-                    try {
-                        const errorData = await response.json();
-                        setError(errorData.message || 'Login failed.');
-                    } catch (jsonError) {
-                        setError('Login failed.');
-                        console.error('Error parsing error response:', jsonError);
-                        try {
-                            const rawText = await response.text();
-                            console.error("Raw response text:", rawText);
-                        } catch (textError) {
-                            console.error("Failed to get raw text:", textError);
-                        }
-                    }
-                }
+                setError(responseData.message || 
+                       (response.status === 401 ? 'Invalid credentials' : 
+                        'Login failed. Please try again.'));
                 return;
             }
 
-            const data = await response.json();
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('username', data.employee.username);
-            localStorage.setItem('team', data.employee.team)
+            // Handle successful login
+            const { token, user, employee } = responseData;
+            const userData = user || employee; // Handle both response structures
+            
+            if (!token || !userData) {
+                throw new Error('Invalid response from server');
+            }
+
+            // Store authentication data
+            localStorage.setItem('token', token);
+            localStorage.setItem('username', userData.username);
+            localStorage.setItem('team', userData.team);
+            localStorage.setItem('name', userData.name || '');
+
             navigate('/dashboard');
         } catch (err) {
             console.error('Login Error:', err);
-            if (err instanceof TypeError && err.message === 'Failed to fetch') {
-                setError('Network error. Please check your connection.');
-            } else {
-                setError('An unexpected error occurred.');
-            }
+            setError(err.message === 'Failed to fetch' 
+                ? 'Network error. Please check your connection.'
+                : 'An unexpected error occurred.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -66,7 +64,11 @@ const EmployeeLogin = () => {
                 <div className="bg-white p-8 w-2xl">
                     <h2 className="text-2xl font-bold mb-4 text-center">Employee Login</h2>
 
-                    {error && <p className="text-red-500 mb-4">{error}</p>}
+                    {error && (
+                        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                            {error}
+                        </div>
+                    )}
 
                     <form onSubmit={handleSubmit}>
                         <div className="mb-4">
@@ -80,6 +82,7 @@ const EmployeeLogin = () => {
                                 placeholder="Enter your username"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
+                                required
                             />
                         </div>
 
@@ -94,14 +97,16 @@ const EmployeeLogin = () => {
                                 placeholder="Enter your password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
+                                required
                             />
                         </div>
 
                         <button
                             type="submit"
-                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-300"
+                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-50"
+                            disabled={isLoading}
                         >
-                            Login
+                            {isLoading ? 'Logging in...' : 'Login'}
                         </button>
                     </form>
                 </div>

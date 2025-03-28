@@ -31,6 +31,8 @@ const authMiddleware = (req, res, next) => {
     req.role = decoded.role; // Attach role to the request
     req.team = decoded.team; // Attach team to the request
     req.username = decoded.username; // Attach username to the request
+    req.name = decoded.name; // Attach username to the request
+
     
     next();
   } catch (error) {
