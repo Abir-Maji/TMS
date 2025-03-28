@@ -1,5 +1,18 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { 
+  FiHome, 
+  FiList, 
+  FiTrendingUp, 
+  FiUsers, 
+  FiUserPlus,
+  FiUser,
+  FiMenu,
+  FiX,
+  FiLogOut,
+  FiCalendar,
+  FiSettings
+} from 'react-icons/fi';
 import TaskAssignment from '../Components/AdminDashboardContent/TaskAssignment';
 import DeadlineTracking from '../Components/AdminDashboardContent/DeadlineTracking';
 import ProgressReporting from '../Components/AdminDashboardContent/ProgressReporting';
@@ -8,298 +21,166 @@ import RoleManagement from '../Components/AdminDashboardContent/RoleManagement';
 import RegisterEmployee from '../Components/AdminDashboardContent/RegisterEmployee';
 import ViewEmployees from '../Components/AdminDashboardContent/ViewEmployees';
 import DefaultContent from '../Components/AdminDashboardContent/DefaultContent';
-import logo from '../assets/logo.png'; // Adjust the path based on your file location
-
+import logo from '../assets/logo1.png';
 
 const AdminDashboard = () => {
   const [activeContent, setActiveContent] = useState('default');
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const navigate = useNavigate();
-
-  // Logout function
+  const name = localStorage.getItem('username');
+  
   const handleLogout = () => {
     localStorage.removeItem('authToken');
     navigate('/');
   };
 
-  // Toggle sidebar expansion
   const toggleSidebar = () => {
     setIsSidebarExpanded(!isSidebarExpanded);
   };
 
-  // Function to determine if a link is active
-  const isActive = (content) => {
-    return activeContent === content;
+  const getInitials = (name) => {
+    if (!name) return '';
+    const names = name.split(' ');
+    let initials = names[0].charAt(0).toUpperCase();
+    if (names.length > 1) {
+      initials += names[names.length - 1].charAt(0).toUpperCase();
+    }
+    return initials;
   };
 
-  // Render content based on activeContent state
+  const sidebarItems = [
+    { 
+      id: 'default', 
+      label: 'Dashboard', 
+      component: <DefaultContent />,
+      icon: <FiHome size={20} />
+    },
+    { 
+      id: 'taskAssignment', 
+      label: 'Task Assignment', 
+      component: <TaskAssignment />,
+      icon: <FiList size={20} />
+    },
+    { 
+      id: 'deadlineTracking', 
+      label: 'Deadlines', 
+      component: <DeadlineTracking />,
+      icon: <FiCalendar size={20} />
+    },
+    { 
+      id: 'progressReporting', 
+      label: 'Progress', 
+      component: <ProgressReporting />,
+      icon: <FiTrendingUp size={20} />
+    },
+    { 
+      id: 'collaboration', 
+      label: 'Collaboration', 
+      component: <Collaboration />,
+      icon: <FiUsers size={20} />
+    },
+    { 
+      id: 'roleManagement', 
+      label: 'Role Management', 
+      component: <RoleManagement />,
+      icon: <FiSettings size={20} />
+    },
+    { 
+      id: 'registerEmployee', 
+      label: 'Register Employee', 
+      component: <RegisterEmployee />,
+      icon: <FiUserPlus size={20} />
+    },
+    { 
+      id: 'viewEmployees', 
+      label: 'View Employees', 
+      component: <ViewEmployees />,
+      icon: <FiUser size={20} />
+    },
+  ];
+
   const renderContent = () => {
-    switch (activeContent) {
-      case 'taskAssignment':
-        return <TaskAssignment />;
-      case 'deadlineTracking':
-        return <DeadlineTracking />;
-      case 'progressReporting':
-        return <ProgressReporting />;
-      case 'collaboration':
-        return <Collaboration />;
-      case 'roleManagement':
-        return <RoleManagement />;
-      case 'registerEmployee':
-        return <RegisterEmployee />;
-      case 'viewEmployees': // Add case for viewing employees
-        return <ViewEmployees />;
-      default:
-        return <DefaultContent />;
-    }
+    const selectedItem = sidebarItems.find((item) => item.id === activeContent);
+    return selectedItem ? selectedItem.component : <DefaultContent />;
   };
 
   return (
-    <div className="flex">
+    <div className="flex h-screen bg-[#f8fafc]">
       {/* Sidebar */}
-      <div
-        className={`flex h-screen flex-col justify-between border-e border-gray-100 bg-white transition-all duration-300 ${isSidebarExpanded ? 'w-64' : 'w-16'
-          }`}
-      >
-        <div>
-          <div className="inline-flex items-center justify-center">
-            <img
-              src={logo}
-              alt="Logo"
-              className="max-w-9/12 mt-4 rounded-lg" // Adjust size and styling as needed
-            />
-          </div>
-
-          <div className="border-t border-gray-100">
-            <div className="px-2">
-              <div className="py-4">
-                <a
-                  href="#"
-                  onClick={() => setActiveContent('default')}
-                  className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('default') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                    }`}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="size-5 opacity-75"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
-                  {isSidebarExpanded && (
-                    <span className="ml-2 text-sm font-medium">Dashboard</span>
-                  )}
-                </a>
-              </div>
-
-              <ul className="space-y-1 border-t border-gray-100 pt-4">
-                <li>
-                  <a
-                    href="#"
-                    onClick={() => setActiveContent('taskAssignment')}
-                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('taskAssignment') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                      }`}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="size-5 opacity-75"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                    {isSidebarExpanded && (
-                      <span className="ml-2 text-sm font-medium">Tasks</span>
-                    )}
-                  </a>
-                </li>
-
-                <li>
-                  <a
-                    href="#"
-                    onClick={() => setActiveContent('deadlineTracking')}
-                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('deadlineTracking') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                      }`}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="size-5 opacity-75"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                      />
-                    </svg>
-                    {isSidebarExpanded && (
-                      <span className="ml-2 text-sm font-medium">Deadlines</span>
-                    )}
-                  </a>
-                </li>
-
-                <li>
-                  <a
-                    href="#"
-                    onClick={() => setActiveContent('progressReporting')}
-                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('progressReporting') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                      }`}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="size-5 opacity-75"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                      />
-                    </svg>
-                    {isSidebarExpanded && (
-                      <span className="ml-2 text-sm font-medium">Progress</span>
-                    )}
-                  </a>
-                </li>
-
-                <li>
-                  <a
-                    href="#"
-                    onClick={() => setActiveContent('collaboration')}
-                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('collaboration') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                      }`}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="size-5 opacity-75"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
-                    {isSidebarExpanded && (
-                      <span className="ml-2 text-sm font-medium">Collaboration</span>
-                    )}
-                  </a>
-                </li>
-
-                <li>
-                  <a
-                    href="#"
-                    onClick={() => setActiveContent('registerEmployee')}
-                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('registerEmployee') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                      }`}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="size-5 opacity-75"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                      />
-                    </svg>
-                    {isSidebarExpanded && (
-                      <span className="ml-2 text-sm font-medium">Register Employee</span>
-                    )}
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    onClick={() => setActiveContent('viewEmployees')}
-                    className={`group relative flex items-center rounded-sm px-2 py-1.5 ${isActive('viewEmployees') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                      }`}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="size-5 opacity-75"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                    {isSidebarExpanded && (
-                      <span className="ml-2 text-sm font-medium">View Employees</span>
-                    )}
-                  </a>
-                </li>
-              </ul>
+      <div className={`flex flex-col h-full bg-white transition-all duration-300 shadow-lg ${isSidebarExpanded ? 'w-72' : 'w-20'}`}>
+        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          {isSidebarExpanded && (
+            <div className="flex items-center space-x-3">
+              <img src={logo} alt="Logo" className="h-8" />
+              <span className="text-xl font-semibold text-gray-800">Admin Panel</span>
             </div>
-          </div>
+          )}
+          <button 
+            onClick={toggleSidebar} 
+            className="p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors"
+          >
+            {isSidebarExpanded ? <FiX size={20} /> : <FiMenu size={20} />}
+          </button>
         </div>
 
-        {/* Logout Button */}
-        <div className="sticky inset-x-0 bottom-0 border-t border-gray-100 bg-white p-2">
-          <button
-            onClick={handleLogout}
-            className="group relative flex w-full justify-center rounded-lg px-2 py-1.5 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+        <nav className="flex-1 p-4 overflow-y-auto">
+          <ul className="space-y-2">
+            {sidebarItems.map((item) => (
+              <li key={item.id}>
+                <button 
+                  onClick={() => setActiveContent(item.id)} 
+                  className={`flex items-center w-full p-4 rounded-xl transition-colors ${activeContent === item.id ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}`}
+                >
+                  <span className={`${activeContent === item.id ? 'text-blue-600' : 'text-gray-500'}`}>
+                    {item.icon}
+                  </span>
+                  {isSidebarExpanded && (
+                    <span className="ml-4 font-medium">{item.label}</span>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <div className="p-4 border-t border-gray-100">
+          <button 
+            onClick={handleLogout} 
+            className="flex items-center w-full p-4 rounded-xl text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="size-5 opacity-75"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-              />
-            </svg>
+            <FiLogOut size={20} />
             {isSidebarExpanded && (
-              <span className="ml-2 text-sm font-medium">Logout</span>
+              <span className="ml-4 font-medium">Logout</span>
             )}
           </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-6 bg-gray-100">
-        {renderContent()}
+      <div className="flex-1 overflow-auto">
+        <div className="p-8">
+          <div className="mb-8 flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm">
+            <h1 className="text-2xl font-bold text-gray-800">
+              {sidebarItems.find(item => item.id === activeContent)?.label}
+            </h1>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold shadow-sm">
+                  {getInitials(name)}
+                </div>
+                {isSidebarExpanded && (
+                  <div className="text-right">
+                    {/* <p className="text-sm font-medium text-gray-700">{name}</p> */}
+                    <p className="text-xs text-gray-500">Admin</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-2xl shadow-sm">
+            {renderContent()}
+          </div>
+        </div>
       </div>
     </div>
   );

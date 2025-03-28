@@ -1,9 +1,20 @@
 import React, { useState, useEffect } from 'react';
+import { 
+  FiTrendingUp, 
+  FiFilter, 
+  FiSearch, 
+  FiRefreshCw,
+  FiLoader,
+  FiAlertCircle,
+  FiCheckCircle,
+  FiCircle
+} from 'react-icons/fi';
 
-const ProgreeReporting = () => {
+const ProgressReporting = () => {
   const [tasks, setTasks] = useState([]);
-  const [editingTask, setEditingTask] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
 
   const fetchTasks = async () => {
     setIsLoading(true);
@@ -20,95 +31,164 @@ const ProgreeReporting = () => {
     }
   };
 
+  const getStatusColor = (progress) => {
+    if (progress >= 90) return 'bg-green-100 text-green-800';
+    if (progress >= 50) return 'bg-blue-100 text-blue-800';
+    if (progress > 0) return 'bg-yellow-100 text-yellow-800';
+    return 'bg-gray-100 text-gray-800';
+  };
+
+  const getStatusIcon = (progress) => {
+    if (progress >= 90) return <FiCheckCircle className="text-green-500" />;
+    if (progress >= 50) return <FiCircle className="text-blue-500" />;
+    return <FiAlertCircle className="text-yellow-500" />;
+  };
+
+  const filteredTasks = tasks.filter(task => {
+    const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         task.user.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || 
+                         (filterStatus === 'completed' && task.progress >= 100) ||
+                         (filterStatus === 'in-progress' && task.progress < 100 && task.progress > 0) ||
+                         (filterStatus === 'not-started' && task.progress === 0);
+    return matchesSearch && matchesStatus;
+  });
+
   useEffect(() => {
     fetchTasks();
   }, []);
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-xl font-bold mb-4">Task Progress</h2>
-      {isLoading ? (
-        <p>Loading tasks...</p>
-      ) : (
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-200">
-              {/* <th className="p-2 border">ID</th> */}
-              <th className="p-2 border">Title</th>
-              <th className="p-2 border">Description</th>
-              <th className="p-2 border">Progress</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tasks.map((task) => (
-              <tr key={task._id} className="border">
-                {/* <td className="p-2 border">{task._id}</td> */}
-                <td className="p-2 border text-center">{task.title}</td>
-                <td className="p-2 border text-center">{task.description}</td>
-                <td className="p-2 border text-center">{task.progress} %</td>
-                
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+    <div className="">
+      <div className="max-auto mx-auto bg-white rounded-xl shadow-md overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
+          <div className="flex items-center space-x-3">
+            <FiTrendingUp className="text-2xl" />
+            <h2 className="text-2xl font-bold">Task Progress Reporting</h2>
+          </div>
+          <p className="mt-1 opacity-90">View progress of all tasks</p>
+        </div>
 
-      {editingTask && (
-        <div className="fixed inset-0  bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-            <h3 className="text-xl font-bold mb-4">Edit Task</h3>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                const updatedData = {
-                  title: e.target.elements.title.value,
-                  description: e.target.elements.description.value,
-                  deadline: e.target.elements.deadline.value,
-                  priority: e.target.elements.priority.value,
-                  team: e.target.elements.team.value,
-                  user: e.target.elements.user.value,
-                };
-                handleUpdate(editingTask._id, updatedData);
-              }}
-            >
-              <label htmlFor="user" className="block text-sm font-medium text-gray-700">
-                Title
-              </label>
-              <input type="text" name="title" defaultValue={editingTask.title} className="border rounded px-3 py-2 mb-2 w-full" required />
-              <label htmlFor="user" className="block text-sm font-medium text-gray-700">
-                Description
-              </label>
-              <textarea name="description" defaultValue={editingTask.description} className="border rounded px-3 py-2 mb-2 w-full" required />
-              <label htmlFor="user" className="block text-sm font-medium text-gray-700">
-                Deadline Date
-              </label>
-              <input type="date" name="deadline" defaultValue={editingTask.deadline} className="border rounded px-3 py-2 mb-2 w-full" required />
-              <label htmlFor="user" className="block text-sm font-medium text-gray-700">
-                Priority
-              </label>
-              <select name="priority" defaultValue={editingTask.priority} className="border rounded px-3 py-2 mb-2 w-full" required>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-              </select>
-              <label htmlFor="user" className="block text-sm font-medium text-gray-700">
-                Group
-              </label>
-              <input type="text" name="team" defaultValue={editingTask.team} className="border rounded px-3 py-2 mb-2 w-full" required />
-              <label htmlFor="user" className="block text-sm font-medium text-gray-700">
-                Employee Name
-              </label>
-              <input type="text" name="user" defaultValue={editingTask.user} className="border rounded px-3 py-2 mb-2 w-full" required />
-              <div className="flex justify-end">
-                <button type="button" onClick={() => setEditingTask(null)} className="bg-gray-500 text-white px-4 py-2 rounded mr-2">Cancel</button>
-                <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded">Save</button>
+        {/* Filters */}
+        <div className="p-6 border-b border-gray-200 bg-gray-50">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Search Tasks</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiSearch className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search by title or employee..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
-            </form>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Status</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiFilter className="text-gray-400" />
+                </div>
+                <select
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition appearance-none"
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="completed">Completed</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="not-started">Not Started</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={fetchTasks}
+                className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 transition flex items-center justify-center"
+              >
+                <FiRefreshCw className="mr-2" />
+                Refresh
+              </button>
+            </div>
           </div>
         </div>
-      )}
+
+        {/* Task Progress Table */}
+        <div className="overflow-x-auto">
+          {isLoading ? (
+            <div className="p-8 flex justify-center">
+              <FiLoader className="animate-spin text-3xl text-blue-500" />
+            </div>
+          ) : (
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned To</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredTasks.length > 0 ? (
+                  filteredTasks.map((task) => (
+                    <tr key={task._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="font-medium text-gray-900">{task.title}</div>
+                        <div className="text-sm text-gray-500 truncate max-w-xs">{task.description}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {task.user}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {task.team}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          {getStatusIcon(task.progress || 0)}
+                          <span className={`ml-2 px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(task.progress || 0)}`}>
+                            {task.progress >= 100 ? 'Completed' : 
+                             task.progress > 0 ? 'In Progress' : 'Not Started'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="w-full bg-gray-200 rounded-full h-2.5 mr-3">
+                            <div 
+                              className="h-2.5 rounded-full" 
+                              style={{ 
+                                width: `${task.progress || 0}%`,
+                                backgroundColor: task.progress >= 90 ? '#10B981' : 
+                                               task.progress >= 50 ? '#3B82F6' : '#F59E0B'
+                              }}
+                            ></div>
+                          </div>
+                          <span className="text-sm font-medium">{task.progress || 0}%</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
+                      No tasks found matching your criteria
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
 
-export default ProgreeReporting;
+export default ProgressReporting;

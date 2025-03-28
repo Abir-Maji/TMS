@@ -1,23 +1,32 @@
 import React, { useState } from 'react';
+import { 
+  FiPlusCircle, 
+  FiCalendar, 
+  FiAlertTriangle, 
+  FiUser, 
+  FiUsers,
+  FiFlag,
+  FiClock,
+  FiAward
+} from 'react-icons/fi';
 
 const TaskAssignment = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    currentDate: new Date().toISOString().split('T')[0], // Automatically fetch current date
+    currentDate: new Date().toISOString().split('T')[0],
     deadline: '',
     priority: 'medium',
     team: '',
     user: '',
-    progress: 0, // Add progress field
+    progress: 0,
   });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    // Convert to uppercase if the field is 'team'
     const updatedValue = name === 'team' ? value.toUpperCase() : value;
-
     setFormData({
       ...formData,
       [name]: updatedValue,
@@ -26,18 +35,18 @@ const TaskAssignment = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
-    // Validate deadline date
     const currentDate = new Date(formData.currentDate);
     const deadlineDate = new Date(formData.deadline);
 
     if (deadlineDate < currentDate) {
       alert('Deadline cannot be in the past.');
+      setIsSubmitting(false);
       return;
     }
 
     try {
-      // Send form data to the backend
       const response = await fetch('http://localhost:5000/tasks', {
         method: 'POST',
         headers: {
@@ -46,15 +55,13 @@ const TaskAssignment = () => {
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to submit task');
-      }
+      if (!response.ok) throw new Error('Failed to submit task');
 
       const result = await response.json();
       console.log('Task submitted successfully:', result);
       alert('Task added successfully!');
 
-      // Reset form after successful submission
+      // Reset form
       setFormData({
         title: '',
         description: '',
@@ -68,155 +75,155 @@ const TaskAssignment = () => {
     } catch (error) {
       console.error('Error submitting task:', error);
       alert('An error occurred while submitting the task.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-6xl p-8">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">Add New Task</h2>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title */}
-          <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-              Title
-            </label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-              placeholder="Enter task title"
-              required
-            />
+    <div className="">
+      <div className="max-auto mx-auto bg-white rounded-xl shadow-md overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
+          <div className="flex items-center space-x-3">
+            <FiPlusCircle className="text-2xl" />
+            <h2 className="text-2xl font-bold">Create New Task</h2>
+          </div>
+          <p className="mt-1 opacity-90">Fill out the form below to assign a new task to your team</p>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Title */}
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                <FiAward className="mr-2 text-blue-500" />
+                Task Title
+              </label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                placeholder="Enter task title"
+                required
+              />
+            </div>
+
+            {/* Description */}
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                <FiAlertTriangle className="mr-2 text-blue-500" />
+                Description
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows="3"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                placeholder="Describe the task in detail"
+                required
+              />
+            </div>
+
+            {/* Dates */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                <FiClock className="mr-2 text-blue-500" />
+                Current Date
+              </label>
+              <input
+                type="text"
+                name="currentDate"
+                value={formData.currentDate}
+                readOnly
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                <FiCalendar className="mr-2 text-blue-500" />
+                Deadline
+              </label>
+              <input
+                type="date"
+                name="deadline"
+                value={formData.deadline}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                required
+              />
+            </div>
+
+            {/* Priority */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                <FiFlag className="mr-2 text-blue-500" />
+                Priority
+              </label>
+              <select
+                name="priority"
+                value={formData.priority}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                required
+              >
+                <option value="high">High Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="low">Low Priority</option>
+              </select>
+            </div>
+
+            {/* Team */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                <FiUsers className="mr-2 text-blue-500" />
+                Team/Group
+              </label>
+              <input
+                type="text"
+                name="team"
+                value={formData.team}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                placeholder="e.g., MARKETING"
+                required
+              />
+            </div>
+
+            {/* Assignee */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                <FiUser className="mr-2 text-blue-500" />
+                Assign To
+              </label>
+              <input
+                type="text"
+                name="user"
+                value={formData.user}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                placeholder="Employee name"
+                required
+              />
+            </div>
           </div>
 
-          {/* Description */}
-          <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-              Description
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              rows="4"
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-              placeholder="Enter task description"
-              required
-            />
-          </div>
-
-          {/* Current Date (Non-Editable) */}
-          <div>
-            <label htmlFor="currentDate" className="block text-sm font-medium text-gray-700">
-              Current Date
-            </label>
-            <input
-              type="text"
-              id="currentDate"
-              name="currentDate"
-              value={formData.currentDate}
-              readOnly
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm bg-gray-100 cursor-not-allowed"
-            />
-          </div>
-
-          {/* Deadline */}
-          <div>
-            <label htmlFor="deadline" className="block text-sm font-medium text-gray-700">
-              Deadline
-            </label>
-            <input
-              type="date"
-              id="deadline"
-              name="deadline"
-              value={formData.deadline}
-              onChange={handleChange}
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-              required
-            />
-          </div>
-
-          {/* Priority */}
-          <div>
-            <label htmlFor="priority" className="block text-sm font-medium text-gray-700">
-              Priority
-            </label>
-            <select
-              id="priority"
-              name="priority"
-              value={formData.priority}
-              onChange={handleChange}
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-              required
-            >
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
-          </div>
-
-          {/* Group Name */}
-          <div>
-            <label htmlFor="team" className="block text-sm font-medium text-gray-700">
-              Group Name
-            </label>
-            <input
-              type="text"
-              id="team"
-              name="team"
-              value={formData.team}
-              onChange={handleChange}
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-              placeholder="Enter group name"
-              required
-            />
-          </div>
-
-          {/* User */}
-          <div>
-            <label htmlFor="user" className="block text-sm font-medium text-gray-700">
-              Assign to Employee
-            </label>
-            <input
-              type="text"
-              id="user"
-              name="user"
-              value={formData.user}
-              onChange={handleChange}
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-              placeholder="Enter user name"
-              required
-            />
-          </div>
-
-          {/* Progress (Hidden) */}
-          <div>
-            <input
-              type="number"
-              id="progress"
-              name="progress"
-              value={formData.progress}
-              onChange={handleChange}
-              className="hidden"
-              placeholder="Enter progress (0-100)"
-              min="0"
-              max="100"
-              required
-            />
-          </div>
+          {/* Hidden Progress */}
+          <input type="hidden" name="progress" value={formData.progress} />
 
           {/* Submit Button */}
-          <div>
+          <div className="pt-4">
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
+              disabled={isSubmitting}
+              className={`w-full py-3 px-4 rounded-lg font-medium text-white transition ${isSubmitting ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
             >
-              Add Task
+              {isSubmitting ? 'Creating Task...' : 'Create Task'}
             </button>
           </div>
         </form>
