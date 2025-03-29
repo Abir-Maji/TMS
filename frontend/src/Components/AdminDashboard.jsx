@@ -17,7 +17,6 @@ import TaskAssignment from '../Components/AdminDashboardContent/TaskAssignment';
 import DeadlineTracking from '../Components/AdminDashboardContent/DeadlineTracking';
 import ProgressReporting from '../Components/AdminDashboardContent/ProgressReporting';
 import Collaboration from '../Components/AdminDashboardContent/Collaboration';
-import RoleManagement from '../Components/AdminDashboardContent/RoleManagement';
 import RegisterEmployee from '../Components/AdminDashboardContent/RegisterEmployee';
 import ViewEmployees from '../Components/AdminDashboardContent/ViewEmployees';
 import DefaultContent from '../Components/AdminDashboardContent/DefaultContent';
@@ -78,12 +77,6 @@ const AdminDashboard = () => {
       label: 'Collaboration', 
       component: <Collaboration />,
       icon: <FiUsers size={20} />
-    },
-    { 
-      id: 'roleManagement', 
-      label: 'Role Management', 
-      component: <RoleManagement />,
-      icon: <FiSettings size={20} />
     },
     { 
       id: 'registerEmployee', 
