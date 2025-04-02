@@ -12,7 +12,7 @@ const taskSchema = new mongoose.Schema({
     default: 'medium'
   },
   team: { type: String, required: true },
-  users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Employee' }],
+  users: { type: String, required: true }, // Instead of array // Changed to string
   progress: { 
     type: Number, 
     required: true, 

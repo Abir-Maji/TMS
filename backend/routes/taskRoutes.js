@@ -8,16 +8,15 @@ const {
 
 const router = express.Router();
 
-// POST /api/tasks - Create new task
+// Add middleware to log requests for debugging
+router.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  next();
+});
+
 router.post('/', createTask);
-
-// GET /api/tasks - Get all tasks
 router.get('/', getTasks);
-
-// PUT /api/tasks/:id - Update task
 router.put('/:id', updateTask);
-
-// DELETE /api/tasks/:id - Delete task
 router.delete('/:id', deleteTask);
 
 module.exports = router;

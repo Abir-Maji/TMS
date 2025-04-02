@@ -56,7 +56,10 @@ const DeadlineTracking = () => {
       const response = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedData),
+        body: JSON.stringify({
+          ...updatedData,
+          users: updatedData.users // Ensure we're using the correct field name
+        }),
       });
       if (!response.ok) throw new Error('Failed to update task');
       alert('Task updated successfully');
@@ -79,10 +82,10 @@ const DeadlineTracking = () => {
 
   const filteredTasks = tasks.filter(task => {
     const taskTitle = task.title || '';
-    const taskUser = task.user || '';
+    const taskUsers = task.users || ''; // Changed from task.user to task.users
     
     const matchesSearch = taskTitle.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         taskUser.toLowerCase().includes(searchTerm.toLowerCase());
+                         taskUsers.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPriority = filterPriority === 'all' || task.priority === filterPriority;
     return matchesSearch && matchesPriority;
   });
@@ -110,7 +113,7 @@ const DeadlineTracking = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">Search Tasks</label>
               <input
                 type="text"
-                placeholder="Search by title or employee..."
+                placeholder="Search by title or assigned users..."
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -192,7 +195,7 @@ const DeadlineTracking = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <div className="flex items-center">
                           <FiUser className="mr-2 text-green-500" />
-                          {task.user || 'Unassigned'}
+                          {task.users || 'Unassigned'} {/* Changed from task.user to task.users */}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -258,7 +261,7 @@ const DeadlineTracking = () => {
                   deadline: e.target.elements.deadline.value,
                   priority: e.target.elements.priority.value,
                   team: e.target.elements.team.value,
-                  user: e.target.elements.user.value,
+                  users: e.target.elements.users.value, // Changed from user to users
                 };
                 handleUpdate(editingTask._id, updatedData);
               }}
@@ -303,7 +306,7 @@ const DeadlineTracking = () => {
                   <input
                     type="date"
                     name="deadline"
-                    defaultValue={editingTask.deadline || ''}
+                    defaultValue={editingTask.deadline ? new Date(editingTask.deadline).toISOString().split('T')[0] : ''}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                     required
                   />
@@ -322,8 +325,8 @@ const DeadlineTracking = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Assigned To</label>
                   <input
                     type="text"
-                    name="user"
-                    defaultValue={editingTask.user || ''}
+                    name="users" // Changed from user to users
+                    defaultValue={editingTask.users || ''} // Changed from user to users
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                     required
                   />

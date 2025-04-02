@@ -7,7 +7,8 @@ import {
   FiLoader,
   FiAlertCircle,
   FiCheckCircle,
-  FiCircle
+  FiCircle,
+  FiUser
 } from 'react-icons/fi';
 
 const ProgressReporting = () => {
@@ -46,11 +47,11 @@ const ProgressReporting = () => {
 
   const filteredTasks = tasks.filter(task => {
     const taskTitle = task.title || '';
-    const taskUser = task.user || '';
+    const taskUsers = task.users || ''; // Changed from task.user to task.users
     const taskProgress = task.progress || 0;
     
     const matchesSearch = taskTitle.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         taskUser.toLowerCase().includes(searchTerm.toLowerCase());
+                         taskUsers.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || 
                          (filterStatus === 'completed' && taskProgress >= 100) ||
                          (filterStatus === 'in-progress' && taskProgress < 100 && taskProgress > 0) ||
@@ -85,7 +86,7 @@ const ProgressReporting = () => {
                 </div>
                 <input
                   type="text"
-                  placeholder="Search by title or employee..."
+                  placeholder="Search by title or assigned users..."
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -148,7 +149,10 @@ const ProgressReporting = () => {
                         <div className="text-sm text-gray-500 truncate max-w-xs">{task.description || 'No description'}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {task.user || 'Unassigned'}
+                        <div className="flex items-center">
+                          <FiUser className="mr-2 text-green-500" />
+                          {task.users || 'Unassigned'} {/* Changed from task.user to task.users */}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {task.team || 'No team'}

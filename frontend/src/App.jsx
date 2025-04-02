@@ -7,7 +7,9 @@ import ErrorBoundary from './ErrorBoundary.jsx';
 import AdminLogin from './Pages/AdminLogin.jsx';
 import AdminDashboard from './Components/AdminDashboard.jsx'; 
 import EmployeeDetails from './Components/EmployeeDashboardContent/EmployeeDetails';
- 
+
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const App = () => {
   const isAuthenticated = !!localStorage.getItem('token');
@@ -55,6 +57,8 @@ const App = () => {
           }
         />
       </Routes>
+      <ToastContainer position="bottom-right" autoClose={5000} />
+
     </Router>
   );
 };

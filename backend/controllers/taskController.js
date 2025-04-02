@@ -4,8 +4,8 @@ const createTask = async (req, res) => {
   try {
     const { title, description, deadline, priority, team, users, progress } = req.body;
 
-    // Validation
-    if (!title || !description || !deadline || !team || !users?.length) {
+    // Validation (users is now a string)
+    if (!title || !description || !deadline || !team || !users) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
@@ -14,31 +14,36 @@ const createTask = async (req, res) => {
       return res.status(400).json({ message: 'Deadline must be in the future' });
     }
 
-    // Create task
+    // Create task with string users
     const task = new Task({
       title,
       description,
       deadline,
       priority: priority || 'medium',
       team: team.toUpperCase(),
-      users,
+      users, // This should be a string of comma-separated names
       progress: progress || 0
     });
 
-    await task.save();
-    res.status(201).json(task);
+    const savedTask = await task.save();
+    console.log('Task saved successfully:', savedTask);
+    
+    res.status(201).json({
+      success: true,
+      message: 'Task created successfully',
+      task: savedTask
+    });
 
   } catch (error) {
     console.error('Error creating task:', error);
-    
-    if (error.name === 'ValidationError') {
-      const errors = Object.values(error.errors).map(err => err.message);
-      return res.status(400).json({ message: 'Validation error', errors });
-    }
-    
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create task',
+      error: error.message
+    });
   }
 };
+
 
 const getTasks = async (req, res) => {
   try {
@@ -52,15 +57,15 @@ const getTasks = async (req, res) => {
 const updateTask = async (req, res) => {
   try {
     const task = await Task.findByIdAndUpdate(
-      req.params.id, 
-      req.body, 
+      req.params.id,
+      req.body,
       { new: true, runValidators: true }
     );
-    
+
     if (!task) {
       return res.status(404).json({ message: 'Task not found' });
     }
-    
+
     res.json(task);
   } catch (error) {
     res.status(400).json({ message: 'Error updating task', error: error.message });
@@ -70,11 +75,11 @@ const updateTask = async (req, res) => {
 const deleteTask = async (req, res) => {
   try {
     const task = await Task.findByIdAndDelete(req.params.id);
-    
+
     if (!task) {
       return res.status(404).json({ message: 'Task not found' });
     }
-    
+
     res.json({ message: 'Task deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });

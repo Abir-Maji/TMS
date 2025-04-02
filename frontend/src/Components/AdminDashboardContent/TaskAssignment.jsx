@@ -8,9 +8,10 @@ import {
   FiFlag,
   FiClock,
   FiAward,
-  FiX,
 } from 'react-icons/fi';
 import Select from 'react-select';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const TaskAssignment = () => {
   const defaultFormData = {
@@ -30,9 +31,6 @@ const TaskAssignment = () => {
   const [employees, setEmployees] = useState([]);
   const [isLoadingTeams, setIsLoadingTeams] = useState(false);
   const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
-  const [apiEndpoints, setApiEndpoints] = useState([
-    'http://localhost:5000/api/tasks',
-  ]);
 
   useEffect(() => {
     const fetchTeams = async () => {
@@ -44,15 +42,7 @@ const TaskAssignment = () => {
         setTeams(data.map(team => ({ value: team, label: team })));
       } catch (error) {
         console.error('Error fetching teams:', error);
-        try {
-          const fallbackResponse = await fetch('http://localhost:5000/api/fetch/team');
-          if (fallbackResponse.ok) {
-            const fallbackData = await fallbackResponse.json();
-            setTeams(fallbackData.map(team => ({ value: team, label: team })));
-          }
-        } catch (fallbackError) {
-          console.error('Fallback endpoint also failed:', fallbackError);
-        }
+        toast.error('Failed to load teams');
       } finally {
         setIsLoadingTeams(false);
       }
@@ -75,18 +65,7 @@ const TaskAssignment = () => {
           })));
         } catch (error) {
           console.error('Error fetching employees:', error);
-          try {
-            const fallbackResponse = await fetch(`http://localhost:5000/api/fetch/team/${formData.team}`);
-            if (fallbackResponse.ok) {
-              const fallbackData = await fallbackResponse.json();
-              setEmployees(fallbackData.map(employee => ({
-                value: employee._id,
-                label: employee.name
-              })));
-            }
-          } catch (fallbackError) {
-            console.error('Fallback endpoint also failed:', fallbackError);
-          }
+          toast.error('Failed to load team members');
         } finally {
           setIsLoadingEmployees(false);
         }
@@ -126,64 +105,87 @@ const TaskAssignment = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-
-    if (!formData.title || !formData.description || !formData.deadline || !formData.team || formData.assignedEmployees.length === 0) {
-      alert('All fields are required.');
+  
+    // Clear any previous toasts
+    toast.dismiss();
+  
+    // Validation
+    if (!formData.title || !formData.description || !formData.deadline || !formData.team) {
+      toast.error('Please fill all required fields');
       setIsSubmitting(false);
       return;
     }
-
+  
+    if (formData.assignedEmployees.length === 0) {
+      toast.error('Please assign at least one employee');
+      setIsSubmitting(false);
+      return;
+    }
+  
     const currentDate = new Date(formData.currentDate);
     const deadlineDate = new Date(formData.deadline);
-
+  
     if (deadlineDate < currentDate) {
-      alert('Deadline cannot be in the past.');
+      toast.error('Deadline cannot be in the past');
       setIsSubmitting(false);
       return;
     }
-
+  
+    // Prepare data
     const taskData = {
       title: formData.title,
       description: formData.description,
       deadline: formData.deadline,
       priority: formData.priority,
       team: formData.team,
-      users: formData.assignedEmployees.map(emp => emp.value),
+      users: formData.assignedEmployees.map(emp => emp.label).join(', '),
       progress: formData.progress
     };
-
-    let lastError = null;
-
-    for (const endpoint of apiEndpoints) {
-      try {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(taskData),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || `Server responded with status ${response.status}`);
-        }
-
-        const result = await response.json();
-        alert('Task added successfully!');
-        setFormData({ ...defaultFormData });
-        setIsSubmitting(false);
-        return;
-      } catch (error) {
-        console.error(`Submission failed for ${endpoint}:`, error);
-        lastError = error;
+  
+    console.log('Submitting task data:', taskData); // Debug log
+  
+    try {
+      const response = await fetch('http://localhost:5000/api/tasks', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(taskData)
+      });
+  
+      console.log('Response status:', response.status); // Debug log
+  
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Server error response:', errorData); // Debug log
+        throw new Error(errorData.message || `Server responded with status ${response.status}`);
       }
+  
+      const result = await response.json();
+      console.log('Success response:', result); // Debug log
+  
+      if (!result.success) {
+        throw new Error(result.message || 'Task creation failed');
+      }
+  
+      // Success handling
+      toast.success(result.message || 'Task created successfully!');
+      
+      // Reset form
+      setFormData({
+        ...defaultFormData,
+        currentDate: new Date().toISOString().split('T')[0] // Keep current date updated
+      });
+  
+    } catch (error) {
+      console.error('Task creation error:', error);
+      toast.error(error.message || 'Failed to create task');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    alert(lastError ? `Failed to submit task: ${lastError.message}` : 'Failed to submit task: All endpoints failed');
-    setIsSubmitting(false);
   };
-
+  
   return (
     <div className="max-w-full mx-auto p-4">
       <div className="bg-white rounded-xl shadow-md overflow-hidden">
@@ -197,10 +199,11 @@ const TaskAssignment = () => {
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Title Field */}
             <div className="col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                 <FiAward className="mr-2 text-blue-500" />
-                Task Title
+                Task Title *
               </label>
               <input
                 type="text"
@@ -213,10 +216,11 @@ const TaskAssignment = () => {
               />
             </div>
 
+            {/* Description Field */}
             <div className="col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                 <FiAlertTriangle className="mr-2 text-blue-500" />
-                Description
+                Description *
               </label>
               <textarea
                 name="description"
@@ -229,6 +233,7 @@ const TaskAssignment = () => {
               />
             </div>
 
+            {/* Current Date */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                 <FiClock className="mr-2 text-blue-500" />
@@ -243,10 +248,11 @@ const TaskAssignment = () => {
               />
             </div>
 
+            {/* Deadline */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                 <FiCalendar className="mr-2 text-blue-500" />
-                Deadline
+                Deadline *
               </label>
               <input
                 type="date"
@@ -259,10 +265,11 @@ const TaskAssignment = () => {
               />
             </div>
 
+            {/* Priority */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                 <FiFlag className="mr-2 text-blue-500" />
-                Priority
+                Priority *
               </label>
               <select
                 name="priority"
@@ -277,10 +284,11 @@ const TaskAssignment = () => {
               </select>
             </div>
 
+            {/* Team Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                 <FiUsers className="mr-2 text-blue-500" />
-                Team/Group
+                Team/Group *
               </label>
               <Select
                 options={teams}
@@ -294,10 +302,11 @@ const TaskAssignment = () => {
               />
             </div>
 
+            {/* Employee Assignment */}
             <div className="col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                 <FiUser className="mr-2 text-blue-500" />
-                Assign To
+                Assign To *
               </label>
               <Select
                 isMulti
@@ -307,6 +316,7 @@ const TaskAssignment = () => {
                 placeholder="Select employees"
                 isLoading={isLoadingEmployees}
                 isDisabled={!formData.team || isLoadingEmployees}
+                closeMenuOnSelect={false}
               />
 
               {formData.assignedEmployees.length > 0 && (
@@ -319,12 +329,13 @@ const TaskAssignment = () => {
             </div>
           </div>
 
+          {/* Submit Button */}
           <div className="pt-4">
             <button
               type="submit"
-              disabled={isSubmitting || formData.assignedEmployees.length === 0}
+              disabled={isSubmitting}
               className={`w-full py-3 px-4 rounded-lg font-medium text-white transition ${
-                isSubmitting || formData.assignedEmployees.length === 0
+                isSubmitting
                   ? 'bg-blue-400 cursor-not-allowed'
                   : 'bg-blue-600 hover:bg-blue-700'
               }`}

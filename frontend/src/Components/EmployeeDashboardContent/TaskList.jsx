@@ -74,7 +74,7 @@ const TaskList = () => {
         task.title.toLowerCase().includes(term) ||
         task.description.toLowerCase().includes(term) ||
         task.priority.toLowerCase().includes(term) ||
-        task.user.toLowerCase().includes(term) ||
+        (task.users && task.users.toLowerCase().includes(term)) || // Changed from task.user to task.users
         task.team.toLowerCase().includes(term)
       );
       setFilteredTasks(filtered);
@@ -174,7 +174,7 @@ const TaskList = () => {
                   <div className="flex items-center text-gray-700">
                     <FiUser className="mr-2 text-purple-600" />
                     <span className="font-medium">Assigned to:</span>
-                    <span className="ml-2">{task.user}</span>
+                    <span className="ml-2">{task.users || 'Unassigned'}</span> {/* Changed from task.user to task.users */}
                   </div>
                 </div>
               </div>
