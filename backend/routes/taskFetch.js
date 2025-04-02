@@ -15,15 +15,15 @@ router.get('/team', async (req, res) => {
 
 // GET /api/employee/team/:team - Get employees by team
 router.get('/team/:team', async (req, res) => {
-  try {
-    const employees = await Employee.find({ 
-      team: req.params.team.toUpperCase() 
-    }).select('_id name');
-    
-    res.json(employees);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
-  }
-});
+    try {
+      const employees = await Employee.find({ 
+        team: { $regex: new RegExp(`^${req.params.team}$`, 'i') } 
+      }).select('_id name');
+      
+      res.json(employees);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
 
 module.exports = router;

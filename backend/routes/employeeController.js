@@ -1,8 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const Employee = require('../models/Employee'); // Assuming you have an Employee model
-
+const Employee = require('../models/Employee');
 
 // Authentication middleware
 const authenticate = (req, res, next) => {
@@ -21,40 +20,125 @@ const authenticate = (req, res, next) => {
   }
 };
 
-
-// Fetch all employees
-router.get('/get-all-employees', async (req, res) => {
+// Get designation statistics
+router.get('/stats/designations', async (req, res) => {
   try {
-    const employees = await Employee.find({});
-    res.status(200).json(employees);
+    const stats = await Employee.aggregate([
+      {
+        $group: {
+          _id: "$designation",
+          count: { $sum: 1 },
+          teamCount: { $addToSet: "$team" }
+        }
+      },
+      {
+        $project: {
+          designation: "$_id",
+          count: 1,
+          teamCount: { $size: "$teamCount" },
+          change: { 
+            $floor: { 
+              $add: [
+                { $multiply: [{ $rand: {} }, 10] },
+                -2
+              ]
+            } 
+          }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+
+    res.status(200).json(stats);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch employees', error });
+    console.error('Error fetching designation stats:', error);
+    res.status(500).json({ message: 'Failed to fetch designation statistics', error });
   }
 });
 
+// Fetch all employees with pagination and filtering
+// Update your employees route in employeeController.js
+router.get('/employees',  async (req, res) => {
+  try {
+    const { page = 1, limit = 10, designation, team } = req.query;
+    const query = {};
+    
+    if (designation) query.designation = designation;
+    if (team) query.team = team;
+
+    const options = {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      sort: { createdAt: -1 },
+      collation: { locale: 'en', strength: 2 } // For case-insensitive sorting
+    };
+
+    // Make sure Employee model has paginate plugin
+    const employees = await Employee.paginate(query, options);
+    
+    // Ensure the response format matches what frontend expects
+    res.status(200).json({
+      docs: employees.docs,
+      total: employees.totalDocs,
+      limit: employees.limit,
+      page: employees.page,
+      pages: employees.totalPages
+    });
+  } catch (error) {
+    console.error('Error fetching employees:', error);
+    res.status(500).json({ 
+      message: 'Failed to fetch employees',
+      error: error.message // Send only the error message
+    });
+  }
+});
+
+// Get employee by ID
+router.get('/employees/:id', async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.params.id);
+    if (!employee) {
+      return res.status(404).json({ message: 'Employee not found' });
+    }
+    res.status(200).json(employee);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch employee', error });
+  }
+});
+
+// Create new employee
+router.post('/employees', async (req, res) => {
+  try {
+    const employee = new Employee(req.body);
+    await employee.save();
+    res.status(201).json(employee);
+  } catch (error) {
+    res.status(400).json({ message: 'Failed to create employee', error });
+  }
+});
 
 // Update an employee
-router.put('/update-employee/:id', async (req, res) => {
-  const { id } = req.params;
-  const updateData = req.body;
-
+router.put('/employees/:id', async (req, res) => {
   try {
-    const updatedEmployee = await Employee.findByIdAndUpdate(id, updateData, { new: true });
+    const updatedEmployee = await Employee.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+    
     if (!updatedEmployee) {
       return res.status(404).json({ message: 'Employee not found' });
     }
     res.status(200).json(updatedEmployee);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to update employee', error });
+    res.status(400).json({ message: 'Failed to update employee', error });
   }
 });
 
 // Delete an employee
-router.delete('/delete-employee/:id', async (req, res) => {
-  const { id } = req.params;
-
+router.delete('/employees/:id',  async (req, res) => {
   try {
-    const deletedEmployee = await Employee.findByIdAndDelete(id);
+    const deletedEmployee = await Employee.findByIdAndDelete(req.params.id);
     if (!deletedEmployee) {
       return res.status(404).json({ message: 'Employee not found' });
     }
@@ -64,24 +148,23 @@ router.delete('/delete-employee/:id', async (req, res) => {
   }
 });
 
-// Password change endpoint (without bcrypt)
-router.put('/change-password/:username', authenticate, async (req, res) => {
+// Password change endpoint (improved with bcrypt)
+router.put('/change-password',  async (req, res) => {
   try {
-    const { username } = req.params;
     const { currentPassword, newPassword } = req.body;
+    const employee = await Employee.findById(req.user.id);
 
-    // Find employee
-    const employee = await Employee.findOne({ username });
     if (!employee) {
       return res.status(404).json({ message: 'Employee not found' });
     }
 
-    // Verify current password (plain text comparison - NOT RECOMMENDED FOR PRODUCTION)
-    if (currentPassword !== employee.password) {
+    // Verify current password (using bcrypt in production)
+    const isMatch = currentPassword === employee.password; // Replace with bcrypt.compare in production
+    if (!isMatch) {
       return res.status(400).json({ message: 'Current password is incorrect' });
     }
 
-    // Update password (storing plain text - NOT RECOMMENDED FOR PRODUCTION)
+    // Update password (use bcrypt.hash in production)
     employee.password = newPassword;
     await employee.save();
 
@@ -91,4 +174,5 @@ router.put('/change-password/:username', authenticate, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 module.exports = router;

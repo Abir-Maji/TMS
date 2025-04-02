@@ -23,7 +23,7 @@ const DeadlineTracking = () => {
   const fetchTasks = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/tasks');
+      const response = await fetch('http://localhost:5000/api/tasks');
       if (!response.ok) throw new Error('Failed to fetch tasks');
       const data = await response.json();
       setTasks(data);
@@ -38,7 +38,7 @@ const DeadlineTracking = () => {
   const handleDelete = async (taskId) => {
     if (window.confirm('Are you sure you want to delete this task?')) {
       try {
-        const response = await fetch(`http://localhost:5000/tasks/${taskId}`, {
+        const response = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
           method: 'DELETE',
         });
         if (!response.ok) throw new Error('Failed to delete task');
@@ -53,7 +53,7 @@ const DeadlineTracking = () => {
 
   const handleUpdate = async (taskId, updatedData) => {
     try {
-      const response = await fetch(`http://localhost:5000/tasks/${taskId}`, {
+      const response = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedData),
@@ -78,8 +78,11 @@ const DeadlineTracking = () => {
   };
 
   const filteredTasks = tasks.filter(task => {
-    const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         task.user.toLowerCase().includes(searchTerm.toLowerCase());
+    const taskTitle = task.title || '';
+    const taskUser = task.user || '';
+    
+    const matchesSearch = taskTitle.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         taskUser.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPriority = filterPriority === 'all' || task.priority === filterPriority;
     return matchesSearch && matchesPriority;
   });
@@ -161,33 +164,35 @@ const DeadlineTracking = () => {
                   filteredTasks.map((task) => (
                     <tr key={task._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-medium text-gray-900">{task.title}</div>
-                        <div className="text-sm text-gray-500 truncate max-w-xs">{task.description}</div>
+                        <div className="font-medium text-gray-900">{task.title || 'Untitled Task'}</div>
+                        <div className="text-sm text-gray-500 truncate max-w-xs">{task.description || 'No description'}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <FiClock className="mr-2 text-blue-500" />
-                          <span>{new Date(task.deadline).toLocaleDateString()}</span>
+                          <span>{task.deadline ? new Date(task.deadline).toLocaleDateString() : 'No deadline'}</span>
                         </div>
                         <div className="text-xs text-gray-500">
-                          {Math.ceil((new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24))} days remaining
+                          {task.deadline ? 
+                            `${Math.ceil((new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24))} days remaining` :
+                            'No deadline set'}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getPriorityColor(task.priority)}`}>
-                          {task.priority}
+                          {task.priority || 'Not specified'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <div className="flex items-center">
                           <FiUsers className="mr-2 text-purple-500" />
-                          {task.team}
+                          {task.team || 'No team'}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <div className="flex items-center">
                           <FiUser className="mr-2 text-green-500" />
-                          {task.user}
+                          {task.user || 'Unassigned'}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -265,7 +270,7 @@ const DeadlineTracking = () => {
                   <input 
                     type="text" 
                     name="title" 
-                    defaultValue={editingTask.title} 
+                    defaultValue={editingTask.title || ''} 
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                     required 
                   />
@@ -274,7 +279,7 @@ const DeadlineTracking = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
                   <select
                     name="priority"
-                    defaultValue={editingTask.priority}
+                    defaultValue={editingTask.priority || 'medium'}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                     required
                   >
@@ -287,7 +292,7 @@ const DeadlineTracking = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                   <textarea
                     name="description"
-                    defaultValue={editingTask.description}
+                    defaultValue={editingTask.description || ''}
                     rows="3"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                     required
@@ -298,7 +303,7 @@ const DeadlineTracking = () => {
                   <input
                     type="date"
                     name="deadline"
-                    defaultValue={editingTask.deadline}
+                    defaultValue={editingTask.deadline || ''}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                     required
                   />
@@ -308,7 +313,7 @@ const DeadlineTracking = () => {
                   <input
                     type="text"
                     name="team"
-                    defaultValue={editingTask.team}
+                    defaultValue={editingTask.team || ''}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                     required
                   />
@@ -318,7 +323,7 @@ const DeadlineTracking = () => {
                   <input
                     type="text"
                     name="user"
-                    defaultValue={editingTask.user}
+                    defaultValue={editingTask.user || ''}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                     required
                   />

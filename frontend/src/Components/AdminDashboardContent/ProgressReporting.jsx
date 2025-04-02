@@ -19,7 +19,7 @@ const ProgressReporting = () => {
   const fetchTasks = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/tasks');
+      const response = await fetch('http://localhost:5000/api/tasks');
       if (!response.ok) throw new Error('Failed to fetch tasks');
       const data = await response.json();
       setTasks(data);
@@ -45,12 +45,16 @@ const ProgressReporting = () => {
   };
 
   const filteredTasks = tasks.filter(task => {
-    const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         task.user.toLowerCase().includes(searchTerm.toLowerCase());
+    const taskTitle = task.title || '';
+    const taskUser = task.user || '';
+    const taskProgress = task.progress || 0;
+    
+    const matchesSearch = taskTitle.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         taskUser.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || 
-                         (filterStatus === 'completed' && task.progress >= 100) ||
-                         (filterStatus === 'in-progress' && task.progress < 100 && task.progress > 0) ||
-                         (filterStatus === 'not-started' && task.progress === 0);
+                         (filterStatus === 'completed' && taskProgress >= 100) ||
+                         (filterStatus === 'in-progress' && taskProgress < 100 && taskProgress > 0) ||
+                         (filterStatus === 'not-started' && taskProgress === 0);
     return matchesSearch && matchesStatus;
   });
 
@@ -140,14 +144,14 @@ const ProgressReporting = () => {
                   filteredTasks.map((task) => (
                     <tr key={task._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-medium text-gray-900">{task.title}</div>
-                        <div className="text-sm text-gray-500 truncate max-w-xs">{task.description}</div>
+                        <div className="font-medium text-gray-900">{task.title || 'Untitled Task'}</div>
+                        <div className="text-sm text-gray-500 truncate max-w-xs">{task.description || 'No description'}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {task.user}
+                        {task.user || 'Unassigned'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {task.team}
+                        {task.team || 'No team'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">

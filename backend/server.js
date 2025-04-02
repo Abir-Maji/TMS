@@ -47,13 +47,13 @@ const connectDB = require('./config/db');
 const taskRoutes = require('./routes/taskRoutes');
 const employeeController = require('./routes/employeeController');
 const employeeTaskRoutes = require('./routes/employeeTaskRoutes');
-const employeeRoutess = require('./routes/employeeRoutes');
 
 const adminCollaboratorsRoutes = require('./routes/admincollaborators');
 const employeeCollaboratorsRoutes = require('./routes/employeecollaborators');
 
-
-const employeeRoutes = require('./routes/employee');
+const employeeRoutes = require('./routes/employeeRoutes');
+const employeeRegister = require('./routes/employee');
+const fetch = require('./routes/taskFetch');
 
 dotenv.config();
 
@@ -72,16 +72,15 @@ connectDB(); // Ensure this is called before defining routes
 // Routes
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
-app.use('/employee', require('./routes/employee'));
-app.use('/tasks', taskRoutes);
-app.use('/api/employee', employeeController);
+// app.use('/employee', require('./routes/employee'));
+app.use('/api/tasks', taskRoutes);
+app.use('/api/control', employeeController);
 app.use('/api/employee/tasks', employeeTaskRoutes);
-app.use('/api/employee', employeeRoutess);
+app.use('/api/employee', employeeRoutes);
 app.use('/api/admin', adminCollaboratorsRoutes); 
 app.use('/api', employeeCollaboratorsRoutes);
-
-
-app.use('/api/employee', employeeRoutes);
+app.use('/api/register', employeeRegister);
+app.use('/api/fetch', fetch);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

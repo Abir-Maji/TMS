@@ -5,14 +5,14 @@ const Collaborator = require('../models/Collaborator');
 
 router.post('/register-employee', async (req, res) => {
     try {
-        const { name, email, phone, team, username, password } = req.body;
+        const { name, email, phone, team, designation, username, password } = req.body;
 
         // Validate input
-        if (!name || !email || !phone || !team || !username || !password) {
+        if (!name || !email || !phone || !team || !designation || !username || !password) {
             return res.status(400).json({ message: 'All fields are required' });
         }
 
-        // Trim the username *immediately* after receiving it. This is critical.
+        // Trim the username *immediately* after receiving it
         const trimmedUsername = username.trim();
 
         // Check if employee already exists (email for employee)
@@ -22,8 +22,7 @@ router.post('/register-employee', async (req, res) => {
             return res.status(409).json({ message: 'Employee with this email already exists' });
         }
 
-
-        // **Double Check** - Check if collaborator already exists (username for collaborator) - *BEFORE* the upsert. This adds extra safety
+        // Double Check - Check if collaborator already exists
         let existingCollaborator;
         try {
             existingCollaborator = await Collaborator.findOne({ username: trimmedUsername });
@@ -35,50 +34,44 @@ router.post('/register-employee', async (req, res) => {
             return res.status(500).json({ message: 'Error checking for existing collaborator' });
         }
 
-
-
         // Atomic upsert to prevent race conditions
         const result = await Collaborator.updateOne(
-            { username: trimmedUsername }, // Filter: Find a collaborator with this username (TRIMMED)
+            { username: trimmedUsername },
             {
-                $setOnInsert: {  // Only set these fields if a new document is inserted
+                $setOnInsert: {
                     name: name,
-                    message: `Welcome ${username}`, // Or leave it undefined
+                    message: `Welcome ${username}`,
                 },
             },
-            { upsert: true } // Options:  If no document matches, insert a new one
+            { upsert: true }
         );
 
-
-         // Double check
-         if (result.upsertedCount === 0 && result.modifiedCount === 0) {
-            // No document was upserted, meaning a document with this username already exists
+        // Double check
+        if (result.upsertedCount === 0 && result.modifiedCount === 0) {
             return res.status(409).json({ message: 'Collaborator with this username already exists' });
         }
 
-
-        // **Employee Save with Specific Error Handling**
+        // Employee Save with Specific Error Handling
         try {
             const newEmployee = new Employee({
                 name,
                 email,
                 phone,
                 team,
+                designation, // Added designation field
                 username,
                 password,
             });
             await newEmployee.save();
         } catch (employeeError) {
             console.error("Error saving employee:", employeeError);
-            return res.status(500).json({ message: 'Error saving employee' }); // Generic error message for the client
+            return res.status(500).json({ message: 'Error saving employee' });
         }
 
         res.status(201).json({ message: 'Employee registered and collaborator added successfully' });
 
-
     } catch (error) {
         if (error.code === 11000) {
-            // Duplicate username error (This is a fallback, it SHOULDN'T happen)
             console.error("Duplicate key error (fallback):", error);
             return res.status(409).json({ message: 'Duplicate key error. A collaborator with this username already exists.' });
         }

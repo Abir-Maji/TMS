@@ -1,60 +1,166 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  FiUser, FiUsers, FiActivity, FiCheckCircle, 
-  FiUserPlus, FiList, FiSettings, FiRefreshCw, 
-  FiTrendingUp, FiTrendingDown, FiAlertCircle 
+  FiUser, 
+  FiBriefcase,
+  FiUsers,
+  FiRefreshCw,
+  FiAlertCircle,
+  FiTrendingUp,
+  FiTrendingDown,
+  FiArrowUp,
+  FiArrowDown
 } from 'react-icons/fi';
 import PieChartComponent from '../AdminDashboardContent/Charts/PieChartComponent';
+import PropTypes from 'prop-types';
 
-const DefaultContent = () => {
-  const [stats, setStats] = useState([
-    { title: 'Active Tasks', value: 24, icon: <FiCheckCircle className="text-blue-500" size={20} />, change: 12 },
-    { title: 'Team Members', value: 15, icon: <FiUsers className="text-green-500" size={20} />, change: 3 },
-    { title: 'Projects', value: 8, icon: <FiActivity className="text-purple-500" size={20} />, change: 5 },
-    { title: 'Productivity', value: 86, icon: <FiActivity className="text-orange-500" size={20} />, change: 7 }
-  ]);
+// Constants
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
+const ALL_DESIGNATIONS = [
+  { title: 'Software Engineer', icon: <FiBriefcase className="text-blue-500" size={24} />, color: 'bg-blue-100 text-blue-600' },
+  { title: 'Senior Software Engineer', icon: <FiBriefcase className="text-green-500" size={24} />, color: 'bg-green-100 text-green-600' },
+  { title: 'Team Lead', icon: <FiBriefcase className="text-purple-500" size={24} />, color: 'bg-purple-100 text-purple-600' },
+  { title: 'Project Manager', icon: <FiBriefcase className="text-yellow-500" size={24} />, color: 'bg-yellow-100 text-yellow-600' },
+  { title: 'UI/UX Designer', icon: <FiBriefcase className="text-pink-500" size={24} />, color: 'bg-pink-100 text-pink-600' },
+  { title: 'QA Engineer', icon: <FiBriefcase className="text-red-500" size={24} />, color: 'bg-red-100 text-red-600' },
+  { title: 'DevOps Engineer', icon: <FiBriefcase className="text-indigo-500" size={24} />, color: 'bg-indigo-100 text-indigo-600' },
+  { title: 'Product Manager', icon: <FiBriefcase className="text-teal-500" size={24} />, color: 'bg-teal-100 text-teal-600' },
+  { title: 'HR Manager', icon: <FiBriefcase className="text-orange-500" size={24} />, color: 'bg-orange-100 text-orange-600' },
+  { title: 'Marketing Specialist', icon: <FiBriefcase className="text-cyan-500" size={24} />, color: 'bg-cyan-100 text-cyan-600' }
+];
+
+const CHART_COLORS = [
+  'rgba(99, 102, 241, 0.7)',
+  'rgba(16, 185, 129, 0.7)',
+  'rgba(245, 158, 11, 0.7)',
+  'rgba(239, 68, 68, 0.7)',
+  'rgba(139, 92, 246, 0.7)'
+];
+
+// Sub-components
+const DesignationCard = ({ designation }) => {
+  const isPositive = designation.change >= 0;
+  
+  return (
+    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+      <div className="flex justify-between items-start">
+        <div>
+          <p className="text-sm font-medium text-gray-500">{designation.title}</p>
+          <p className="text-2xl font-bold mt-1">{designation.count}</p>
+          <div className="flex items-center mt-1">
+            {isPositive ? (
+              <FiUsers className="text-green-500 mr-1" />
+            ) : (
+              <FiUsers className="text-red-500 mr-1" />
+            )}
+            <span className={`text-xs ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
+              {Math.abs(designation.change)}% {isPositive ? 'increase' : 'decrease'} from last month
+            </span>
+          </div>
+        </div>
+        <div className={`p-2 rounded-lg ${designation.color}`}>
+          {designation.icon}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+DesignationCard.propTypes = {
+  designation: PropTypes.shape({
+    title: PropTypes.string.isRequired,
+    icon: PropTypes.element.isRequired,
+    color: PropTypes.string.isRequired,
+    count: PropTypes.number.isRequired,
+    change: PropTypes.number.isRequired,
+    key: PropTypes.string.isRequired
+  }).isRequired
+};
+
+const DefaultContent = ({ authToken }) => {
+  const [designationStats, setDesignationStats] = useState([]);
+  const [teamStats, setTeamStats] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [recentActivity, setRecentActivity] = useState([]);
+  const [error, setError] = useState(null);
 
-  // Chart data
-  const departmentData = {
-    labels: ['Development', 'Marketing', 'Design', 'Support'],
-    datasets: [
-      {
-        data: [35, 25, 20, 20],
-        backgroundColor: [
-          'rgba(99, 102, 241, 0.7)',
-          'rgba(16, 185, 129, 0.7)',
-          'rgba(245, 158, 11, 0.7)',
-          'rgba(239, 68, 68, 0.7)'
-        ],
-        borderWidth: 1
+  const fetchDesignationData = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/control/stats/designations`, {
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
-    ]
+
+      const apiData = await response.json();
+
+      const mergedData = ALL_DESIGNATIONS.map(designation => {
+        const apiStats = apiData.find(item => item.designation === designation.title) || {
+          count: 0,
+          teamCount: 0,
+          change: 0
+        };
+        
+        return {
+          ...designation,
+          count: apiStats.count,
+          teamCount: apiStats.teamCount,
+          change: apiStats.change,
+          key: designation.title
+        };
+      });
+
+      setDesignationStats(mergedData);
+      setTeamStats(apiData.map(item => ({ 
+        name: item.designation,
+        count: item.count,
+        key: item.designation
+      })));
+    } catch (error) {
+      console.error('Error fetching designation data:', error);
+      setError(error.message || 'Failed to load designation statistics. Please try again.');
+
+      if (process.env.NODE_ENV === 'development') {
+        const sampleData = ALL_DESIGNATIONS.map(designation => ({
+          ...designation,
+          count: Math.floor(Math.random() * 10),
+          teamCount: Math.floor(Math.random() * 3) + 1,
+          change: Math.floor(Math.random() * 10) - 3,
+          key: designation.title
+        }));
+        setDesignationStats(sampleData);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const refreshData = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setStats(prevStats => prevStats.map(stat => ({
-        ...stat,
-        value: Math.max(5, stat.value + (Math.random() > 0.5 ? 1 : -1)),
-        change: Math.floor(Math.random() * 10) - 2
-      })));
-      
-      setRecentActivity([
-        { id: 1, action: 'Task completed', project: 'Web Redesign', time: '2 mins ago' },
-        { id: 2, action: 'New member added', project: 'Marketing Team', time: '15 mins ago' },
-        { id: 3, action: 'Project updated', project: 'Mobile App', time: '1 hour ago' }
-      ]);
-      setIsLoading(false);
-    }, 1000);
+    fetchDesignationData();
   };
+
+  const departmentData = useMemo(() => ({
+    labels: teamStats.map(team => team.name),
+    datasets: [{
+      data: teamStats.map(team => team.count),
+      backgroundColor: CHART_COLORS,
+      borderWidth: 1
+    }]
+  }), [teamStats]);
+
+  useEffect(() => {
+    fetchDesignationData();
+  }, [authToken]);
 
   return (
     <div className="space-y-6">
-      {/* Welcome Section */}
+      {/* Header Card */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
           <div className="flex items-center mb-4 md:mb-0">
@@ -66,113 +172,69 @@ const DefaultContent = () => {
                 Welcome back, <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Admin</span>
               </h1>
               <p className="text-gray-600 flex items-center">
-                <FiUsers className="mr-2 text-blue-500" />
-                <span>Manage the <span className="font-semibold text-blue-600">Admin</span> teams</span>
+                <FiBriefcase className="mr-2 text-blue-500" />
+                <span>View <span className="font-semibold text-blue-600">designation statistics</span></span>
               </p>
             </div>
           </div>
+          <button 
+            onClick={refreshData}
+            disabled={isLoading}
+            className="flex items-center px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+            aria-label="Refresh data"
+            aria-busy={isLoading}
+          >
+            <FiRefreshCw className={`mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh Data
+          </button>
+        </div>
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border-l-4 border-red-500 p-4">
           <div className="flex items-center">
-            <button 
-              onClick={refreshData}
-              disabled={isLoading}
-              className="flex items-center px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
-            >
-              <FiRefreshCw className={`mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-              Refresh Data
-            </button>
+            <FiAlertCircle className="text-red-500 mr-2" />
+            <span className="text-red-700">{error}</span>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat, index) => {
-          const isPositive = stat.change >= 0;
-          return (
-            <div key={index} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">{stat.title}</p>
-                  <p className="text-2xl font-bold mt-1">{stat.value}{stat.title === 'Productivity' ? '%' : ''}</p>
-                  <div className="flex items-center mt-1">
-                    {isPositive ? (
-                      <FiTrendingUp className="text-green-500 mr-1" />
-                    ) : (
-                      <FiTrendingDown className="text-red-500 mr-1" />
-                    )}
-                    <span className={`text-xs ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
-                      {Math.abs(stat.change)}% {isPositive ? 'increase' : 'decrease'} from last week
-                    </span>
-                  </div>
-                </div>
-                <div className="p-2 bg-gray-50 rounded-lg">
-                  {stat.icon}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Charts Section - Now only Pie Chart */}
-      <div className="grid grid-cols-1">
-        <PieChartComponent 
-          data={departmentData} 
-          title="Team Distribution" 
-        />
-      </div>
-
-      {/* Quick Actions */}
+      {/* Designation Statistics */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <button className="flex flex-col items-center justify-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors border border-blue-100">
-            <FiUserPlus className="text-blue-500 mb-2" size={24} />
-            <span className="text-sm font-medium">Add User</span>
-          </button>
-          <button className="flex flex-col items-center justify-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors border border-green-100">
-            <FiList className="text-green-500 mb-2" size={24} />
-            <span className="text-sm font-medium">Create Task</span>
-          </button>
-          <button className="flex flex-col items-center justify-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors border border-purple-100">
-            <FiUsers className="text-purple-500 mb-2" size={24} />
-            <span className="text-sm font-medium">Manage Team</span>
-          </button>
-          <button className="flex flex-col items-center justify-center p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors border border-orange-100">
-            <FiSettings className="text-orange-500 mb-2" size={24} />
-            <span className="text-sm font-medium">Settings</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Recent Activity</h2>
-        {recentActivity.length > 0 ? (
-          <div className="space-y-4">
-            {recentActivity.map(activity => (
-              <div key={activity.id} className="flex items-start p-3 hover:bg-gray-50 rounded-lg transition-colors">
-                <div className="flex-shrink-0 mt-1">
-                  <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center">
-                    <FiActivity className="text-blue-500" size={16} />
-                  </div>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-800">{activity.action}</p>
-                  <p className="text-xs text-gray-500">{activity.project} • {activity.time}</p>
-                </div>
-              </div>
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">Designation Statistics</h2>
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {[...Array(10)].map((_, i) => (
+              <div key={i} className="bg-gray-100 p-4 rounded-xl h-32 animate-pulse" />
+            ))}
+          </div>
+        ) : designationStats.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {designationStats.map((designation) => (
+              <DesignationCard key={designation.key} designation={designation} />
             ))}
           </div>
         ) : (
           <div className="flex items-center justify-center py-8 text-gray-400">
             <FiAlertCircle className="mr-2" />
-            <span>No recent activity</span>
+            <span>No designation data available</span>
           </div>
         )}
       </div>
+
+      {/* Pie Chart */}
+      <PieChartComponent 
+        data={departmentData} 
+        title="Team Distribution" 
+        key={JSON.stringify(teamStats)}
+      />
     </div>
   );
+};
+
+DefaultContent.propTypes = {
+  authToken: PropTypes.string.isRequired
 };
 
 export default DefaultContent;

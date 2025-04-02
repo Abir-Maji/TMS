@@ -7,7 +7,8 @@ import {
   FiKey,
   FiEye, 
   FiEyeOff,
-  FiPlusCircle
+  FiPlusCircle,
+  FiBriefcase
 } from 'react-icons/fi';
 
 const RegisterEmployee = () => {
@@ -17,9 +18,64 @@ const RegisterEmployee = () => {
     email: '',
     phone: '',
     team: '',
+    designation: '',
     username: '',
     password: ''
   });
+
+  // Designation options as separate cards
+  const designationCards = [
+    {
+      title: 'Software Engineer',
+      icon: <FiBriefcase className="text-blue-500" size={24} />,
+      color: 'bg-blue-50 border-blue-100 hover:bg-blue-100'
+    },
+    {
+      title: 'Senior Software Engineer',
+      icon: <FiBriefcase className="text-green-500" size={24} />,
+      color: 'bg-green-50 border-green-100 hover:bg-green-100'
+    },
+    {
+      title: 'Team Lead',
+      icon: <FiBriefcase className="text-purple-500" size={24} />,
+      color: 'bg-purple-50 border-purple-100 hover:bg-purple-100'
+    },
+    {
+      title: 'Project Manager',
+      icon: <FiBriefcase className="text-yellow-500" size={24} />,
+      color: 'bg-yellow-50 border-yellow-100 hover:bg-yellow-100'
+    },
+    {
+      title: 'UI/UX Designer',
+      icon: <FiBriefcase className="text-pink-500" size={24} />,
+      color: 'bg-pink-50 border-pink-100 hover:bg-pink-100'
+    },
+    {
+      title: 'QA Engineer',
+      icon: <FiBriefcase className="text-red-500" size={24} />,
+      color: 'bg-red-50 border-red-100 hover:bg-red-100'
+    },
+    {
+      title: 'DevOps Engineer',
+      icon: <FiBriefcase className="text-indigo-500" size={24} />,
+      color: 'bg-indigo-50 border-indigo-100 hover:bg-indigo-100'
+    },
+    {
+      title: 'Product Manager',
+      icon: <FiBriefcase className="text-teal-500" size={24} />,
+      color: 'bg-teal-50 border-teal-100 hover:bg-teal-100'
+    },
+    {
+      title: 'HR Manager',
+      icon: <FiBriefcase className="text-orange-500" size={24} />,
+      color: 'bg-orange-50 border-orange-100 hover:bg-orange-100'
+    },
+    {
+      title: 'Marketing Specialist',
+      icon: <FiBriefcase className="text-cyan-500" size={24} />,
+      color: 'bg-cyan-50 border-cyan-100 hover:bg-cyan-100'
+    }
+  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -29,11 +85,18 @@ const RegisterEmployee = () => {
     }));
   };
 
+  const handleDesignationSelect = (designation) => {
+    setFormData(prev => ({
+      ...prev,
+      designation
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     try {
-      const response = await fetch('http://localhost:5000/employee/register-employee', {
+      const response = await fetch('http://localhost:5000/api/register/register-employee', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -49,6 +112,7 @@ const RegisterEmployee = () => {
           email: '',
           phone: '',
           team: '',
+          designation: '',
           username: '',
           password: ''
         });
@@ -186,6 +250,30 @@ const RegisterEmployee = () => {
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* Designation Cards */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Designation</label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+              {designationCards.map((card, index) => (
+                <div
+                  key={index}
+                  className={`p-3 rounded-lg border cursor-pointer transition-colors flex flex-col items-center ${card.color} ${
+                    formData.designation === card.title ? 'ring-2 ring-blue-500' : ''
+                  }`}
+                  onClick={() => handleDesignationSelect(card.title)}
+                >
+                  <div className="mb-2">{card.icon}</div>
+                  <span className="text-sm text-center font-medium">{card.title}</span>
+                </div>
+              ))}
+            </div>
+            {formData.designation && (
+              <p className="text-sm text-gray-500 mt-2">
+                Selected: <span className="font-medium text-blue-600">{formData.designation}</span>
+              </p>
+            )}
           </div>
 
           {/* Submit Button */}

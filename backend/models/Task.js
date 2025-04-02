@@ -3,12 +3,23 @@ const mongoose = require('mongoose');
 const taskSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String, required: true },
-  currentDate: { type: String, required: true },
-  deadline: { type: String, required: true },
-  priority: { type: String, required: true },
+  currentDate: { type: Date, default: Date.now },
+  deadline: { type: Date, required: true },
+  priority: { 
+    type: String, 
+    required: true,
+    enum: ['high', 'medium', 'low'],
+    default: 'medium'
+  },
   team: { type: String, required: true },
-  user: { type: String, required: true },
-  progress: { type: Number, required: true, default: 0 }, // Add progress field
-});
+  users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Employee' }],
+  progress: { 
+    type: Number, 
+    required: true, 
+    min: 0,
+    max: 100,
+    default: 0 
+  }
+}, { timestamps: true });
 
 module.exports = mongoose.model('Task', taskSchema);
