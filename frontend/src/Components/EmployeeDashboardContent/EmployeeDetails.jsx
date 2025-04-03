@@ -217,7 +217,7 @@ const EmployeeProfile = () => {
                   <input
                     type={showCurrentPassword ? "text" : "password"}
                     name="currentPassword"
-                    value={passwordData.currentPassword}
+                    value={employee?.password}
                     onChange={handlePasswordChange}
                     placeholder="Current Password"
                     className="w-full p-3 rounded-lg border bg-white border-blue-300 pr-10"
