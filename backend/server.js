@@ -14,6 +14,7 @@ const employeeRoutes = require('./routes/employeeRoutes');
 const employeeRegister = require('./routes/employee');
 const fetchRoutes = require('./routes/taskFetch');
 const authRoutes = require('./routes/auth');
+const teamRoutes = require('./routes/teamRoutes');
 
 dotenv.config();
 
@@ -56,6 +57,7 @@ app.use('/api/admin', adminCollaboratorsRoutes);
 app.use('/api/collaborators', employeeCollaboratorsRoutes);
 app.use('/api/register', employeeRegister);
 app.use('/api/fetch', fetchRoutes);
+app.use('/api/teams', teamRoutes);
 
 // Health Check Endpoint
 app.get('/api/health', (req, res) => {
