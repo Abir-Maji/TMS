@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import logo from '../assets/logo.png'; // Import the logo
+import logo from '../assets/logo.png';
 
-function LandingPage() {
+const LandingPage = () => {
     const colorMap = {
         blue: 'bg-blue-600',
         green: 'bg-green-600',
@@ -11,7 +11,6 @@ function LandingPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Navbar */}
             <nav className="bg-white shadow-md fixed w-full top-0 z-50">
                 <div className="container mx-auto px-6 py-4 flex justify-between items-center">
                     <Link to="/" className="flex items-center">
@@ -40,13 +39,13 @@ function LandingPage() {
                     <div className="space-x-4 animate-fade-in">
                         <Link
                             to="/EmployeeLogin"
-                            className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-300"
+                            className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-300 inline-block"
                         >
                             Employee Login
                         </Link>
                         <Link
                             to="/AdminLogin"
-                            className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-300"
+                            className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-300 inline-block"
                         >
                             Admin Login
                         </Link>
@@ -160,6 +159,6 @@ function LandingPage() {
             </footer>
         </div>
     );
-}
+};
 
 export default LandingPage;

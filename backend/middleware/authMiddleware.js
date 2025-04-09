@@ -1,24 +1,29 @@
-const jwt = require('jsonwebtoken');
-
 const authMiddleware = (req, res, next) => {
-  const token = req.header('Authorization')?.replace('Bearer ', ''); // Remove "Bearer " prefix
-  if (!token) {
-    return res.status(401).json({ message: 'No token, authorization denied' });
+  // Check session instead of JWT token
+  if (!req.session.user) {
+    return res.status(401).json({ message: 'No session, authorization denied' });
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded.userId; // Attach user ID to the request
-    req.role = decoded.role; // Attach role to the request
-    req.team = decoded.team; // Attach team to the request
-    req.username = decoded.username; // Attach username to the request
-    req.name = decoded.name; // Attach username to the request
-
+    // Attach session data to request object
+    req.user = req.session.user._id;
+    req.role = req.session.user.role;
+    req.team = req.session.user.team;
+    req.username = req.session.user.username;
+    req.name = req.session.user.name;
     
     next();
   } catch (error) {
-    res.status(401).json({ message: 'Invalid token' });
+    res.status(401).json({ message: 'Invalid session' });
   }
 };
 
-module.exports = authMiddleware;
+// Additional role-based middleware
+const adminMiddleware = (req, res, next) => {
+  if (req.role !== 'admin') {
+    return res.status(403).json({ message: 'Admin access required' });
+  }
+  next();
+};
+
+module.exports = { authMiddleware, adminMiddleware };

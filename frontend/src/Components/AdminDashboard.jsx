@@ -28,9 +28,27 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const name = localStorage.getItem('username');
   
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    navigate('/');
+  const handleLogout = async () => {
+    try {
+      // Call the server logout endpoint
+      const response = await fetch('http://localhost:5000/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include' // Important for session cookies
+      });
+      
+      if (response.ok) {
+        // Clear client-side storage
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('name');
+        
+        // Redirect to login
+        navigate('/login');
+      } else {
+        console.error('Logout failed');
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   const toggleSidebar = () => {

@@ -274,7 +274,7 @@ const TaskDashboard = () => {
                   <div className="space-y-4">
                     {completedTasksList.length > 0 ? (
                       completedTasksList.map(task => (
-                        <div key={task.id} className="flex items-start p-3 bg-green-50 rounded-lg">
+                        <div key={task._id} className="flex items-start p-3 bg-green-50 rounded-lg">
                           <div className="h-3 w-3 rounded-full mt-1.5 bg-green-500"></div>
                           <div className="ml-3 flex-1">
                             <div className="flex justify-between">
@@ -308,7 +308,7 @@ const TaskDashboard = () => {
                   <div className="space-y-4">
                     {pendingTasksList.length > 0 ? (
                       pendingTasksList.map(task => (
-                        <div key={task.id} className="flex items-start p-3 bg-yellow-50 rounded-lg">
+                        <div key={task._id} className="flex items-start p-3 bg-yellow-50 rounded-lg">
                           <div className={`h-3 w-3 rounded-full mt-1.5 ${
                             task.priority === 'high' ? 'bg-red-500' : 
                             task.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'

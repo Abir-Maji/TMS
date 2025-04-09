@@ -22,10 +22,25 @@ const Dashboard = () => {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const navigate = useNavigate();
   const name = localStorage.getItem('name');
-  
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    navigate('/');
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        localStorage.clear();
+        navigate('/', { replace: true });
+      } else {
+        console.error('Logout failed:', data.message || 'Unknown error');
+      }
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
   };
 
   const toggleSidebar = () => {
@@ -43,36 +58,11 @@ const Dashboard = () => {
   };
 
   const sidebarItems = [
-    { 
-      id: 'default', 
-      label: 'Dashboard', 
-      component: <DefaultContent />,
-      icon: <FiHome size={20} />
-    },
-    { 
-      id: 'TaskList', 
-      label: 'Tasks', 
-      component: <TaskList />,
-      icon: <FiList size={20} />
-    },
-    { 
-      id: 'progressReporting', 
-      label: 'Progress', 
-      component: <ProgressReporting />,
-      icon: <FiTrendingUp size={20} />
-    },
-    { 
-      id: 'collaboration', 
-      label: 'Collaboration', 
-      component: <Collaboration />,
-      icon: <FiUsers size={20} />
-    },
-    { 
-      id: 'EmployeeDetails', 
-      label: 'Profile', 
-      component: <EmployeeDetails />,
-      icon: <FiUser size={20} />
-    },
+    { id: 'default', label: 'Dashboard', component: <DefaultContent />, icon: <FiHome size={20} /> },
+    { id: 'TaskList', label: 'Tasks', component: <TaskList />, icon: <FiList size={20} /> },
+    { id: 'progressReporting', label: 'Progress', component: <ProgressReporting />, icon: <FiTrendingUp size={20} /> },
+    { id: 'collaboration', label: 'Collaboration', component: <Collaboration />, icon: <FiUsers size={20} /> },
+    { id: 'EmployeeDetails', label: 'Profile', component: <EmployeeDetails />, icon: <FiUser size={20} /> },
   ];
 
   const renderContent = () => {

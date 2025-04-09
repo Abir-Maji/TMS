@@ -15,41 +15,51 @@ const EmployeeLogin = () => {
         setError(null);
 
         try {
-            const response = await fetch('http://127.0.0.1:5000/api/auth/login', {
+            const response = await fetch('http://localhost:5000/api/auth/login', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include',
                 body: JSON.stringify({ username, password }),
             });
 
-            const responseData = await response.json();
-            
+            const data = await response.json();
+
             if (!response.ok) {
-                setError(responseData.message || 
-                       (response.status === 401 ? 'Invalid credentials' : 
-                        'Login failed. Please try again.'));
+                throw new Error(data.message || 'Login failed');
+            }
+
+            // SESSION-BASED login handling
+            if (data.success && data.user) {
+                const userData = data.user;
+                localStorage.setItem('username', userData.username);
+                localStorage.setItem('team', userData.team || '');
+                localStorage.setItem('name', userData.name || '');
+                navigate('/dashboard', { replace: true });
                 return;
             }
 
-            // Handle successful login
-            const { token, user, employee } = responseData;
-            const userData = user || employee; // Handle both response structures
-            
-            if (!token || !userData) {
-                throw new Error('Invalid response from server');
+            // TOKEN-BASED login handling
+            if (data.token && (data.user || data.employee)) {
+                const userData = data.user || data.employee;
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('username', userData.username);
+                localStorage.setItem('team', userData.team || '');
+                localStorage.setItem('name', userData.name || '');
+                navigate('/dashboard', { replace: true });
+                return;
             }
 
-            // Store authentication data
-            localStorage.setItem('token', token);
-            localStorage.setItem('username', userData.username);
-            localStorage.setItem('team', userData.team);
-            localStorage.setItem('name', userData.name || '');
-
-            navigate('/dashboard');
+            throw new Error('Invalid response format from server');
         } catch (err) {
             console.error('Login Error:', err);
-            setError(err.message === 'Failed to fetch' 
-                ? 'Network error. Please check your connection.'
-                : 'An unexpected error occurred.');
+            setError(
+                err.message === 'Failed to fetch' 
+                    ? 'Network error. Please check your connection.'
+                    : err.message || 'An unexpected error occurred.'
+            );
         } finally {
             setIsLoading(false);
         }
@@ -57,12 +67,12 @@ const EmployeeLogin = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-200">
-            <div className="min-h-max rounded-3xl flex items-center justify-center bg-white">
+            <div className="min-h-max rounded-3xl flex items-center justify-center bg-white shadow-lg">
                 <div className="bg-white p-8">
-                    <img src={login} alt="Employee Login" className="w-135 h-auto" />
+                    <img src={login} alt="Employee Login" className="w-full max-w-xs h-auto" />
                 </div>
-                <div className="bg-white p-8 w-2xl">
-                    <h2 className="text-2xl font-bold mb-4 text-center">Employee Login</h2>
+                <div className="bg-white p-8 w-full max-w-md">
+                    <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Employee Login</h2>
 
                     {error && (
                         <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -72,7 +82,7 @@ const EmployeeLogin = () => {
 
                     <form onSubmit={handleSubmit}>
                         <div className="mb-4">
-                            <label htmlFor="username" className="block text-gray-700 font-bold mb-2">
+                            <label htmlFor="username" className="block text-gray-700 font-medium mb-2">
                                 Username
                             </label>
                             <input
@@ -83,11 +93,13 @@ const EmployeeLogin = () => {
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 required
+                                autoComplete="username"
+                                aria-describedby="username-help"
                             />
                         </div>
 
                         <div className="mb-6">
-                            <label htmlFor="password" className="block text-gray-700 font-bold mb-2">
+                            <label htmlFor="password" className="block text-gray-700 font-medium mb-2">
                                 Password
                             </label>
                             <input
@@ -98,15 +110,26 @@ const EmployeeLogin = () => {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
+                                autoComplete="current-password"
+                                aria-describedby="password-help"
                             />
                         </div>
 
                         <button
                             type="submit"
-                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-50"
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 transition-colors"
                             disabled={isLoading}
+                            aria-busy={isLoading}
                         >
-                            {isLoading ? 'Logging in...' : 'Login'}
+                            {isLoading ? (
+                                <span className="flex items-center justify-center">
+                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Logging in...
+                                </span>
+                            ) : 'Login'}
                         </button>
                     </form>
                 </div>

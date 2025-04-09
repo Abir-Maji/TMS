@@ -23,18 +23,11 @@ const PriorityPieChart = () => {
   const [lastUpdated, setLastUpdated] = useState(null);
 
   const determineTaskStatus = (task) => {
-    // First check progress - 100% means completed regardless of status field
     if (task.progress === 100) return 'completed';
-    
-    // Then check status field
     const status = task.status?.toLowerCase().trim();
     if (status === 'completed') return 'completed';
     if (status === 'in progress' || status === 'in-progress') return 'inProgress';
-    
-    // Finally, if progress > 0 but < 100, consider it in progress
     if (task.progress > 0 && task.progress < 100) return 'inProgress';
-    
-    // Otherwise it's pending
     return 'pending';
   };
 
@@ -43,14 +36,14 @@ const PriorityPieChart = () => {
       const team = localStorage.getItem('team');
       if (!team) throw new Error('No team found in localStorage');
 
-      const token = localStorage.getItem('token');
-      if (!token) throw new Error('No authentication token found');
-
       const response = await fetch(`http://localhost:5000/api/employee/tasks/by-team?team=${team.trim()}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include' // Use session-based cookie auth
       });
+
+      if (response.status === 401) {
+        window.location.href = '/login'; // redirect to login on unauthorized
+        return;
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -60,14 +53,12 @@ const PriorityPieChart = () => {
       const data = await response.json();
       if (!data.tasks) throw new Error('No tasks data received');
 
-      // Process status counts - matching ProgressReporting component logic exactly
       const statusCounts = data.tasks.reduce((acc, task) => {
         const status = determineTaskStatus(task);
         acc[status]++;
         return acc;
       }, { pending: 0, completed: 0, inProgress: 0 });
 
-      // Process priority data
       const priorityCounts = data.tasks.reduce((acc, task) => {
         const priority = task.priority?.toLowerCase() || 'unknown';
         acc[priority] = (acc[priority] || 0) + 1;
@@ -115,10 +106,8 @@ const PriorityPieChart = () => {
     return () => clearInterval(intervalId);
   }, [fetchTasksData]);
 
-  // ... (rest of the component remains the same, including the return statement)
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-      {/* Header with last updated time */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <h2 className="text-lg font-semibold text-gray-800">
           Task Overview - Team: <span className="text-blue-600">{localStorage.getItem('team') || 'Unknown'}</span>
@@ -139,10 +128,8 @@ const PriorityPieChart = () => {
           </button>
         </div>
       </div>
-      
-      {/* Task Status Summary Cards */}
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        {/* Pending Tasks Card */}
         <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-xs hover:shadow-sm transition-shadow">
           <div className="flex items-center">
             <div className="p-2 bg-yellow-100 text-yellow-600 rounded-lg mr-3">
@@ -154,8 +141,7 @@ const PriorityPieChart = () => {
             </div>
           </div>
         </div>
-        
-        {/* In Progress Tasks Card */}
+
         <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-xs hover:shadow-sm transition-shadow">
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 text-blue-600 rounded-lg mr-3">
@@ -167,8 +153,7 @@ const PriorityPieChart = () => {
             </div>
           </div>
         </div>
-        
-        {/* Completed Tasks Card */}
+
         <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-xs hover:shadow-sm transition-shadow">
           <div className="flex items-center">
             <div className="p-2 bg-green-100 text-green-600 rounded-lg mr-3">
@@ -182,9 +167,7 @@ const PriorityPieChart = () => {
         </div>
       </div>
 
-      {/* Priority Distribution Chart */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Pie Chart */}
         <div className="h-64">
           {chartData && (
             <Pie 
@@ -220,15 +203,14 @@ const PriorityPieChart = () => {
             />
           )}
         </div>
-        
-        {/* Priority Breakdown */}
+
         <div className="space-y-4">
           {chartData?.labels.map((label, index) => {
             const priority = label.split(' ')[0].toLowerCase();
             const count = chartData.datasets[0].data[index];
             const total = chartData.datasets[0].data.reduce((a, b) => a + b, 0);
             const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
-            
+
             return (
               <div key={label} className="flex items-center p-3 bg-white border border-gray-100 rounded-lg shadow-xs hover:shadow-sm transition-shadow">
                 <div className={`p-2 rounded-lg ${

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import login from '../assets/login.svg';
 
-const AdminLogin = () => {
+const AdminLogin = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
@@ -12,55 +12,27 @@ const AdminLogin = () => {
     e.preventDefault();
     try {
       // Send login request to the admin login endpoint
-      const response = await fetch('http://127.0.0.1:5000/api/auth/admin/login', {
+      const response = await fetch('http://localhost:5000/api/auth/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
+        credentials: 'include'
       });
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          setError('Invalid username or password.');
-        } else if (response.status === 404) {
-          setError('Endpoint not found.');
-        } else if (response.status === 500) {
-          setError('Server error. Please try again later.');
-        } else {
-          try {
-            const errorData = await response.json();
-            setError(errorData.message || 'Login failed.');
-          } catch (jsonError) {
-            setError('Login failed.');
-            console.error('Error parsing error response:', jsonError);
-            try {
-              const rawText = await response.text();
-              console.error('Raw response text:', rawText);
-            } catch (textError) {
-              console.error('Failed to get raw text:', textError);
-            }
-          }
-        }
-        return;
-      }
-
-      // Parse the response data
-      const data = await response.json();
-
-      // Store the token and username in localStorage
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('username', data.username); // Store the username
-
-      // Redirect to the admin dashboard
-      navigate('/admin/dashboard');
-    } catch (err) {
-      console.error('Login Error:', err);
-      if (err instanceof TypeError && err.message === 'Failed to fetch') {
-        setError('Network error. Please check your connection.');
+      if (response.ok) {
+        const data = await response.json();
+        onLoginSuccess();
+        navigate('/admin/dashboard', { replace: true });
+        // Automatic redirect handled by App.jsx useEffect
       } else {
-        setError('An unexpected error occurred.');
+        setError('Invalid credentials');
       }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('Login failed. Please try again.');
     }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-200">

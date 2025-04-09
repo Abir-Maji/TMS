@@ -1,21 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const jwt = require('jsonwebtoken');
-// const User = require('../models/User');
 const Admin = require('../models/Admin');
 const Employee = require('../models/Employee');
+const MongoStore = require('connect-mongo'); // Add this import
 
-// Register a new user (UNSAFE - STORES PLAIN TEXT PASSWORDS)
+// Session-based Registration
 router.post('/register-employee', async (req, res) => {
   try {
     const { name, email, phone, team, username, password } = req.body;
 
-    // Validate required fields
     if (!name || !email || !phone || !team || !username || !password) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    // Check if email or username already exists
     const existingEmployeeByEmail = await Employee.findOne({ email });
     const existingEmployeeByUsername = await Employee.findOne({ username });
 
@@ -26,100 +23,67 @@ router.post('/register-employee', async (req, res) => {
       return res.status(409).json({ message: 'Username already exists' });
     }
 
-    // Create a new employee
-    const newEmployee = new Employee({
-      name,
-      email,
-      phone,
-      team,
-      username,
-      password, // Storing password as plain text (NOT RECOMMENDED)
-    });
-
-    // Save the employee to the database
+    const newEmployee = new Employee({ name, email, phone, team, username, password });
     await newEmployee.save();
 
     res.status(201).json({ message: 'Employee registered successfully' });
   } catch (error) {
-    console.error('Employee registration error:', error);
+    console.error('Registration error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
 
-// Login route (plain text password comparison)
-
+// Session-based Login
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    // Validate input
-    if (!username || !password) {
-      return res.status(400).json({ 
-        success: false,
-        message: 'Username and password are required' 
-      });
-    }
-
-    // Find the employee by username
-    const employee = await Employee.findOne({ username });
-    
-    if (!employee) {
-      return res.status(401).json({ 
-        success: false,
-        message: 'Invalid credentials' // Generic message
-      });
-    }
-
-    // WARNING: Plain text password comparison (not recommended for production)
-    if (password !== employee.password) {
-      return res.status(401).json({ 
-        success: false,
-        message: 'Invalid credentials' 
-      });
-    }
-
-    // Generate JWT token
-    const token = jwt.sign(
-      {
-        userId: employee._id,
-        username: employee.username,
-        role: employee.role,
-        team: employee.team,
-        name: employee.name
-      },
-      process.env.JWT_SECRET,
-      { 
-        expiresIn: '8h'
+      if (!username || !password) {
+          return res.status(400).json({ 
+              success: false,
+              message: 'Username and password are required' 
+          });
       }
-    );
 
-    // Return response without setting HTTP-only cookie
-    const userData = {
-      _id: employee._id,
-      name: employee.name,
-      username: employee.username,
-      email: employee.email,
-      phone: employee.phone,
-      team: employee.team,
-      role: employee.role
-    };
+      const employee = await Employee.findOne({ username });
+      
+      if (!employee || password !== employee.password) {
+          return res.status(401).json({ 
+              success: false,
+              message: 'Invalid credentials'
+          });
+      }
 
-    res.status(200).json({ 
-      success: true,
-      message: 'Login successful',
-      user: userData,
-      token
-    });
+      // Store user in session
+      req.session.user = {
+          _id: employee._id,
+          username: employee.username,
+          role: employee.role,
+          team: employee.team,
+          name: employee.name
+      };
+
+      res.status(200).json({ 
+          success: true,
+          message: 'Login successful',
+          user: {
+              _id: employee._id,
+              username: employee.username,
+              role: employee.role,
+              team: employee.team,
+              name: employee.name
+          }
+      });
 
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ 
-      success: false,
-      message: 'An error occurred during login' 
-    });
+      console.error('Login error:', error);
+      res.status(500).json({ 
+          success: false,
+          message: 'An error occurred during login' 
+      });
   }
 });
-// Admin Login route (plain text password comparison)
+// Admin Login
 router.post('/admin/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -130,73 +94,107 @@ router.post('/admin/login', async (req, res) => {
 
     const admin = await Admin.findOne({ username });
 
-    if (!admin) {
-      return res.status(401).json({ message: 'Invalid username or password' });
+    if (!admin || password !== admin.password) {
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Compare plain text passwords (UNSAFE)
-    if (password !== admin.password) {
-      return res.status(401).json({ message: 'Invalid username or password' });
-    }
-
-    // Generate JWT token
-    const token = jwt.sign({ userId: admin._id, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-    // Return the token and username
-    res.json({ token, username: admin.username });
+    // Store admin in session
+    req.session.user = {
+      _id: admin._id,
+      username: admin.username,
+      role: 'admin'
+    };
+    req.session.cookie.httpOnly = true;
+    req.session.cookie.secure = process.env.NODE_ENV === 'production';
+    req.session.cookie.sameSite = 'lax';
+    res.json({ 
+      success: true,
+      message: 'Admin login successful',
+      user: req.session.user
+    });
   } catch (error) {
     console.error('Admin login error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
 
-// Middleware for protected routes
-const authenticateJWT = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'Authorization token required' });
-  }
+// Session-based Logout
+router.post('/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) {
+      console.error('Session destruction error:', err);
+      return res.status(500).json({ error: 'Logout failed' });
+    }
+    
+    res.clearCookie('connect.sid', {
+      path: '/',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax'
+    });
+    res.json({ success: true });
+  });
+});
 
-  const token = authHeader.split(' ')[1];
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (error) {
-    console.error('JWT Verification failed:', error);
-    return res.status(401).json({ message: 'Invalid or expired token' });
+// Session Authentication Middleware
+const requireAuth = (req, res, next) => {
+  if (!req.session.user) {
+    return res.status(401).json({ message: 'Unauthorized' });
   }
+  next();
 };
 
-// Example protected route
-router.get('/protected', authenticateJWT, async (req, res) => {
+const requireAdmin = (req, res, next) => {
+  if (!req.session.user || req.session.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Admin access required' });
+  }
+  next();
+};
+
+// Protected Routes
+router.get('/protected-route', requireAuth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).select('-password');
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid token' });
-    }
-    res.json({ message: 'Protected route accessed successfully', user });
+    const user = await Employee.findById(req.session.user._id).select('-password');
+    res.json({ message: 'Protected route accessed', user });
   } catch (error) {
     console.error('Protected route error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
-// Example admin protected route
-router.get('/admin/protected', authenticateJWT, async (req, res) => {
+router.get('/admin/protected', requireAuth, requireAdmin, async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Access denied. Admins only.' });
+    const admin = await Admin.findById(req.session.user._id).select('-password');
+    res.json({ message: 'Admin protected route accessed', admin });
+  } catch (error) {
+    console.error('Admin route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Session Check Endpoint
+router.get('/check-session', async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.status(200).json({ 
+        authenticated: false 
+      });
     }
 
-    const admin = await Admin.findById(req.user.userId).select('-password');
-    if (!admin) {
-      return res.status(401).json({ message: 'Invalid token' });
-    }
-    res.json({ message: 'Admin protected route accessed successfully', admin });
+    res.status(200).json({
+      authenticated: true,
+      role: req.session.user.role,
+      user: {
+        _id: req.session.user._id,
+        username: req.session.user.username
+      }
+    });
   } catch (error) {
-    console.error('Admin protected route error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    console.error('Session check error:', error);
+    res.status(500).json({ 
+      error: 'Session check failed',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
