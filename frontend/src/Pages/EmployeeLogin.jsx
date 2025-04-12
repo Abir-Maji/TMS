@@ -37,6 +37,8 @@ const EmployeeLogin = () => {
                 localStorage.setItem('username', userData.username);
                 localStorage.setItem('team', userData.team || '');
                 localStorage.setItem('name', userData.name || '');
+                localStorage.setItem('userId', userData._id || '');
+
                 navigate('/dashboard', { replace: true });
                 return;
             }

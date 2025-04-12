@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FiHome, 
@@ -21,27 +21,41 @@ import RegisterEmployee from '../Components/AdminDashboardContent/RegisterEmploy
 import ViewEmployees from '../Components/AdminDashboardContent/ViewEmployees';
 import DefaultContent from '../Components/AdminDashboardContent/DefaultContent';
 import logo from '../assets/logo1.png';
+import NotificationBell from '../Components/AdminNotificationBell';
 
 const AdminDashboard = () => {
   const [activeContent, setActiveContent] = useState('default');
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
+  const [adminName, setAdminName] = useState('');
   const navigate = useNavigate();
-  const name = localStorage.getItem('username');
-  
+
+  useEffect(() => {
+    const fetchAdminName = async () => {
+      try {
+        const nameFromStorage = localStorage.getItem('username') || 
+                               localStorage.getItem('name') || 
+                               'Admin';
+        setAdminName(nameFromStorage);
+      } catch (error) {
+        console.error('Error fetching admin name:', error);
+        setAdminName('Admin');
+      }
+    };
+
+    fetchAdminName();
+  }, []);
+
   const handleLogout = async () => {
     try {
-      // Call the server logout endpoint
       const response = await fetch('http://localhost:5000/api/auth/logout', {
         method: 'POST',
-        credentials: 'include' // Important for session cookies
+        credentials: 'include'
       });
       
       if (response.ok) {
-        // Clear client-side storage
         localStorage.removeItem('authToken');
+        localStorage.removeItem('username');
         localStorage.removeItem('name');
-        
-        // Redirect to login
         navigate('/login');
       } else {
         console.error('Logout failed');
@@ -56,7 +70,7 @@ const AdminDashboard = () => {
   };
 
   const getInitials = (name) => {
-    if (!name) return '';
+    if (!name) return 'A';
     const names = name.split(' ');
     let initials = names[0].charAt(0).toUpperCase();
     if (names.length > 1) {
@@ -175,13 +189,14 @@ const AdminDashboard = () => {
               {sidebarItems.find(item => item.id === activeContent)?.label}
             </h1>
             <div className="flex items-center space-x-4">
+              <NotificationBell />
               <div className="flex items-center space-x-3">
                 <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold shadow-sm">
-                  {getInitials(name)}
+                  {getInitials(adminName)}
                 </div>
                 {isSidebarExpanded && (
                   <div className="text-right">
-                    {/* <p className="text-sm font-medium text-gray-700">{name}</p> */}
+                    <p className="text-sm font-medium text-gray-700">{adminName}</p>
                     <p className="text-xs text-gray-500">Admin</p>
                   </div>
                 )}

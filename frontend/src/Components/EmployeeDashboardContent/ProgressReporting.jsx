@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiCheckCircle, FiAlertTriangle, FiInfo, FiRefreshCw, FiEdit, FiSearch } from 'react-icons/fi';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const ProgressReporting = () => {
     const [tasks, setTasks] = useState([]);
@@ -9,6 +11,7 @@ const ProgressReporting = () => {
     const [editingTask, setEditingTask] = useState(null);
     const [progressValue, setProgressValue] = useState(0);
     const [searchTerm, setSearchTerm] = useState('');
+    const [completingTaskId, setCompletingTaskId] = useState(null);
 
     const fetchTasks = async () => {
         setIsLoading(true);
@@ -30,7 +33,6 @@ const ProgressReporting = () => {
                 setTasks([]);
                 setFilteredTasks([]);
             } else {
-                // Ensure completed status is properly set for tasks with 100% progress
                 const processedTasks = data.tasks.map(task => ({
                     ...task,
                     status: task.progress === 100 ? 'completed' : (task.status || 'in-progress')
@@ -44,6 +46,57 @@ const ProgressReporting = () => {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const completeTask = async (taskId) => {
+        try {
+            setCompletingTaskId(taskId);
+            const userId = localStorage.getItem('userId');
+            if (!userId) {
+                throw new Error('User ID not found');
+            }
+
+            const response = await axios.put(`http://localhost:5000/api/tasks/${taskId}/complete`, { userId });
+            
+            // Update the local state to reflect completion
+            setTasks(prevTasks =>
+                prevTasks.map(task =>
+                    task._id === taskId ? { 
+                        ...task, 
+                        progress: 100,
+                        status: 'completed',
+                        completedAt: new Date().toISOString(),
+                        isNewNotification: true
+                    } : task
+                )
+            );
+            
+            setFilteredTasks(prevTasks =>
+                prevTasks.map(task =>
+                    task._id === taskId ? { 
+                        ...task, 
+                        progress: 100,
+                        status: 'completed',
+                        completedAt: new Date().toISOString(),
+                        isNewNotification: true
+                    } : task
+                )
+            );
+
+            toast.success('Task completed successfully!');
+        } catch (error) {
+            console.error('Error completing task:', error);
+            toast.error(error.response?.data?.message || 'Failed to complete task');
+            // Revert the checkbox state if the API call fails
+            fetchTasks();
+        } finally {
+            setCompletingTaskId(null);
+        }
+    };
+
+    const handleCheckboxChange = async (task) => {
+        if (task.progress === 100) return;
+        await completeTask(task._id);
     };
 
     const updateProgress = async (taskId, newProgress) => {
@@ -71,7 +124,6 @@ const ProgressReporting = () => {
 
             const updatedTask = await response.json();
 
-            // Ensure status is set correctly in the updated task
             const finalTask = {
                 ...updatedTask.task,
                 status: newProgress === 100 ? 'completed' : 'in-progress'
@@ -92,35 +144,13 @@ const ProgressReporting = () => {
             setEditingTask(null);
 
             if (newProgress === 100) {
-                alert('Task marked as completed successfully!');
+                toast.success('Task marked as completed successfully!');
             }
             return finalTask;
         } catch (error) {
             console.error('Error updating progress:', error);
-            alert(`Failed to update progress: ${error.message}`);
+            toast.error(`Failed to update progress: ${error.message}`);
             throw error;
-        }
-    };
-
-    const handleCheckboxChange = async (task) => {
-        if (task.progress === 100) return;
-        
-        try {
-            setIsLoading(true);
-            // Optimistically update the UI
-            const optimisticTasks = tasks.map(t => 
-                t._id === task._id ? { ...t, status: 'completed', progress: 100 } : t
-            );
-            setTasks(optimisticTasks);
-            setFilteredTasks(optimisticTasks);
-            
-            // Then make the API call
-            await updateProgress(task._id, 100);
-        } catch (error) {
-            // Revert on error
-            fetchTasks();
-        } finally {
-            setIsLoading(false);
         }
     };
 
@@ -233,7 +263,7 @@ const ProgressReporting = () => {
                                         checked={task.progress === 100}
                                         onChange={() => handleCheckboxChange(task)}
                                         className="h-5 w-5 text-green-600 rounded focus:ring-green-500 cursor-pointer"
-                                        disabled={isLoading || task.progress === 100}
+                                        disabled={isLoading || task.progress === 100 || completingTaskId === task._id}
                                     />
                                 </div>
                                 
@@ -282,6 +312,7 @@ const ProgressReporting = () => {
                                             {task.progress === 100 && task.completedAt && (
                                                 <span className="block text-green-600 mt-1">
                                                     Completed on: {new Date(task.completedAt).toLocaleString()}
+                                                    {task.completedBy && ` by ${task.completedBy}`}
                                                 </span>
                                             )}
                                         </div>

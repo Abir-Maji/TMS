@@ -18,10 +18,16 @@ const TaskDashboard = () => {
       const response = await fetch('http://localhost:5000/api/tasks');
       if (!response.ok) throw new Error('Failed to fetch tasks');
       const data = await response.json();
-      setTasks(data);
+      
+      // Ensure tasks is always an array
+      const tasksArray = Array.isArray(data) ? data : 
+                        Array.isArray(data?.tasks) ? data.tasks : [];
+      
+      setTasks(tasksArray);
       setLastUpdated(new Date());
     } catch (err) {
       setError(err.message);
+      setTasks([]); // Ensure tasks is set to empty array on error
     } finally {
       setLoading(false);
     }
@@ -33,29 +39,30 @@ const TaskDashboard = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Calculate task statistics
-  const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(task => 
-    task.status === 'completed' || task.progress === 100
-  ).length;
+  // Safe calculation of task statistics
+  const totalTasks = tasks?.length || 0;
+  const completedTasks = tasks?.filter(task => 
+    task?.status === 'completed' || task?.progress === 100
+  )?.length || 0;
   const pendingTasks = totalTasks - completedTasks;
   const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-  // Group tasks by completion status
-  const completedTasksList = tasks.filter(task => 
-    task.status === 'completed' || task.progress === 100
-  ).slice(0, 3);
+  // Safe filtering for task lists
+  const completedTasksList = tasks?.filter(task => 
+    task?.status === 'completed' || task?.progress === 100
+  )?.slice(0, 3) || [];
 
-  const pendingTasksList = tasks.filter(task => 
-    task.status !== 'completed' && task.progress < 100
-  ).slice(0, 3);
+  const pendingTasksList = tasks?.filter(task => 
+    task?.status !== 'completed' && task?.progress < 100
+  )?.slice(0, 3) || [];
 
-  // Process data for pie chart
+  // Process data for pie chart with null checks
   const getPriorityData = () => {
-    const counts = tasks.reduce((acc, task) => {
-      acc[task.priority] = (acc[task.priority] || 0) + 1;
+    const counts = tasks?.reduce((acc, task) => {
+      const priority = task?.priority?.toLowerCase() || 'unassigned';
+      acc[priority] = (acc[priority] || 0) + 1;
       return acc;
-    }, {});
+    }, {}) || {};
 
     return {
       labels: Object.keys(counts).map(priority => `${priority} Priority`),
@@ -64,25 +71,27 @@ const TaskDashboard = () => {
         backgroundColor: [
           'rgba(75, 192, 192, 0.7)',  // Low
           'rgba(255, 206, 86, 0.7)',   // Medium
-          'rgba(255, 99, 132, 0.7)'    // High
+          'rgba(255, 99, 132, 0.7)',    // High
+          'rgba(153, 102, 255, 0.7)'   // Unassigned
         ],
         borderColor: [
           'rgba(75, 192, 192, 1)',
           'rgba(255, 206, 86, 1)',
-          'rgba(255, 99, 132, 1)'
+          'rgba(255, 99, 132, 1)',
+          'rgba(153, 102, 255, 1)'
         ],
         borderWidth: 2
       }]
     };
   };
 
-  // Process data for team distribution bar chart
+  // Process data for team distribution bar chart with null checks
   const getTeamDistributionData = () => {
-    const teamCounts = tasks.reduce((acc, task) => {
-      const teamName = task.team || 'Unassigned';
+    const teamCounts = tasks?.reduce((acc, task) => {
+      const teamName = task?.team || 'Unassigned';
       acc[teamName] = (acc[teamName] || 0) + 1;
       return acc;
-    }, {});
+    }, {}) || {};
 
     const teamNames = Object.keys(teamCounts);
     const taskCounts = Object.values(teamCounts);
@@ -146,7 +155,6 @@ const TaskDashboard = () => {
             )}
           </div>
         </header>
-        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Priority Pie Chart */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">

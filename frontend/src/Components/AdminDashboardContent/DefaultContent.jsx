@@ -39,14 +39,14 @@ const CHART_COLORS = [
 
 // Sub-components
 const DesignationCard = ({ designation }) => {
-  const isPositive = designation.change >= 0;
+  const isPositive = designation?.change >= 0;
   
   return (
     <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start">
         <div>
-          <p className="text-sm font-medium text-gray-500">{designation.title}</p>
-          <p className="text-2xl font-bold mt-1">{designation.count}</p>
+          <p className="text-sm font-medium text-gray-500">{designation?.title || 'N/A'}</p>
+          <p className="text-2xl font-bold mt-1">{designation?.count || 0}</p>
           <div className="flex items-center mt-1">
             {isPositive ? (
               <FiUsers className="text-green-500 mr-1" />
@@ -54,12 +54,12 @@ const DesignationCard = ({ designation }) => {
               <FiUsers className="text-red-500 mr-1" />
             )}
             <span className={`text-xs ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
-              {Math.abs(designation.change)}% {isPositive ? 'increase' : 'decrease'} from last month
+              {Math.abs(designation?.change || 0)}% {isPositive ? 'increase' : 'decrease'} from last month
             </span>
           </div>
         </div>
-        <div className={`p-2 rounded-lg ${designation.color}`}>
-          {designation.icon}
+        <div className={`p-2 rounded-lg ${designation?.color || 'bg-gray-100 text-gray-600'}`}>
+          {designation?.icon || <FiBriefcase size={24} />}
         </div>
       </div>
     </div>
@@ -68,13 +68,13 @@ const DesignationCard = ({ designation }) => {
 
 DesignationCard.propTypes = {
   designation: PropTypes.shape({
-    title: PropTypes.string.isRequired,
-    icon: PropTypes.element.isRequired,
-    color: PropTypes.string.isRequired,
-    count: PropTypes.number.isRequired,
-    change: PropTypes.number.isRequired,
-    key: PropTypes.string.isRequired
-  }).isRequired
+    title: PropTypes.string,
+    icon: PropTypes.element,
+    color: PropTypes.string,
+    count: PropTypes.number,
+    change: PropTypes.number,
+    key: PropTypes.string
+  })
 };
 
 const DefaultContent = ({ authToken }) => {
@@ -99,9 +99,10 @@ const DefaultContent = ({ authToken }) => {
       }
 
       const apiData = await response.json();
+      const apiDataArray = Array.isArray(apiData) ? apiData : [];
 
       const mergedData = ALL_DESIGNATIONS.map(designation => {
-        const apiStats = apiData.find(item => item.designation === designation.title) || {
+        const apiStats = apiDataArray.find(item => item?.designation === designation.title) || {
           count: 0,
           teamCount: 0,
           change: 0
@@ -109,18 +110,18 @@ const DefaultContent = ({ authToken }) => {
         
         return {
           ...designation,
-          count: apiStats.count,
-          teamCount: apiStats.teamCount,
-          change: apiStats.change,
+          count: apiStats.count || 0,
+          teamCount: apiStats.teamCount || 0,
+          change: apiStats.change || 0,
           key: designation.title
         };
       });
 
       setDesignationStats(mergedData);
-      setTeamStats(apiData.map(item => ({ 
-        name: item.designation,
-        count: item.count,
-        key: item.designation
+      setTeamStats(apiDataArray.map(item => ({ 
+        name: item?.designation || 'Unknown',
+        count: item?.count || 0,
+        key: item?.designation || 'unknown-' + Math.random()
       })));
     } catch (error) {
       console.error('Error fetching designation data:', error);
@@ -146,9 +147,9 @@ const DefaultContent = ({ authToken }) => {
   };
 
   const departmentData = useMemo(() => ({
-    labels: teamStats.map(team => team.name),
+    labels: teamStats?.map(team => team?.name) || [],
     datasets: [{
-      data: teamStats.map(team => team.count),
+      data: teamStats?.map(team => team?.count) || [],
       backgroundColor: CHART_COLORS,
       borderWidth: 1
     }]
@@ -209,10 +210,10 @@ const DefaultContent = ({ authToken }) => {
               <div key={i} className="bg-gray-100 p-4 rounded-xl h-32 animate-pulse" />
             ))}
           </div>
-        ) : designationStats.length > 0 ? (
+        ) : designationStats?.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {designationStats.map((designation) => (
-              <DesignationCard key={designation.key} designation={designation} />
+              <DesignationCard key={designation?.key || Math.random()} designation={designation} />
             ))}
           </div>
         ) : (

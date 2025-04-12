@@ -23,10 +23,14 @@ const ProgressReporting = () => {
       const response = await fetch('http://localhost:5000/api/tasks');
       if (!response.ok) throw new Error('Failed to fetch tasks');
       const data = await response.json();
-      setTasks(data);
+      // Ensure tasks is always an array
+      const tasksArray = Array.isArray(data) ? data : 
+                        Array.isArray(data?.tasks) ? data.tasks : [];
+      setTasks(tasksArray);
     } catch (error) {
       console.error('Error fetching tasks:', error);
       alert('Failed to fetch tasks');
+      setTasks([]); // Set to empty array on error
     } finally {
       setIsLoading(false);
     }
@@ -45,10 +49,11 @@ const ProgressReporting = () => {
     return <FiAlertCircle className="text-yellow-500" />;
   };
 
-  const filteredTasks = tasks.filter(task => {
-    const taskTitle = task.title || '';
-    const taskUsers = task.users || ''; // Changed from task.user to task.users
-    const taskProgress = task.progress || 0;
+  // Safe filtering with null checks
+  const filteredTasks = tasks?.filter(task => {
+    const taskTitle = task?.title || '';
+    const taskUsers = task?.users || '';
+    const taskProgress = task?.progress || 0;
     
     const matchesSearch = taskTitle.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          taskUsers.toLowerCase().includes(searchTerm.toLowerCase());
@@ -57,7 +62,7 @@ const ProgressReporting = () => {
                          (filterStatus === 'in-progress' && taskProgress < 100 && taskProgress > 0) ||
                          (filterStatus === 'not-started' && taskProgress === 0);
     return matchesSearch && matchesStatus;
-  });
+  }) || [];
 
   useEffect(() => {
     fetchTasks();
@@ -143,26 +148,26 @@ const ProgressReporting = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredTasks.length > 0 ? (
                   filteredTasks.map((task) => (
-                    <tr key={task._id} className="hover:bg-gray-50">
+                    <tr key={task?._id || Math.random()} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-medium text-gray-900">{task.title || 'Untitled Task'}</div>
-                        <div className="text-sm text-gray-500 truncate max-w-xs">{task.description || 'No description'}</div>
+                        <div className="font-medium text-gray-900">{task?.title || 'Untitled Task'}</div>
+                        <div className="text-sm text-gray-500 truncate max-w-xs">{task?.description || 'No description'}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <div className="flex items-center">
                           <FiUser className="mr-2 text-green-500" />
-                          {task.users || 'Unassigned'} {/* Changed from task.user to task.users */}
+                          {task?.users || 'Unassigned'}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {task.team || 'No team'}
+                        {task?.team || 'No team'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          {getStatusIcon(task.progress || 0)}
-                          <span className={`ml-2 px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(task.progress || 0)}`}>
-                            {task.progress >= 100 ? 'Completed' : 
-                             task.progress > 0 ? 'In Progress' : 'Not Started'}
+                          {getStatusIcon(task?.progress || 0)}
+                          <span className={`ml-2 px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(task?.progress || 0)}`}>
+                            {task?.progress >= 100 ? 'Completed' : 
+                             task?.progress > 0 ? 'In Progress' : 'Not Started'}
                           </span>
                         </div>
                       </td>
@@ -172,13 +177,13 @@ const ProgressReporting = () => {
                             <div 
                               className="h-2.5 rounded-full" 
                               style={{ 
-                                width: `${task.progress || 0}%`,
-                                backgroundColor: task.progress >= 90 ? '#10B981' : 
-                                               task.progress >= 50 ? '#3B82F6' : '#F59E0B'
+                                width: `${task?.progress || 0}%`,
+                                backgroundColor: task?.progress >= 90 ? '#10B981' : 
+                                               task?.progress >= 50 ? '#3B82F6' : '#F59E0B'
                               }}
                             ></div>
                           </div>
-                          <span className="text-sm font-medium">{task.progress || 0}%</span>
+                          <span className="text-sm font-medium">{task?.progress || 0}%</span>
                         </div>
                       </td>
                     </tr>

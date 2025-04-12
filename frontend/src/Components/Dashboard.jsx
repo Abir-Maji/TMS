@@ -8,7 +8,8 @@ import {
   FiUser,
   FiMenu,
   FiX,
-  FiLogOut
+  FiLogOut,
+  FiBell
 } from 'react-icons/fi';
 import TaskList from '../Components/EmployeeDashboardContent/TaskList';
 import EmployeeDetails from '../Components/EmployeeDashboardContent/EmployeeDetails';
@@ -16,12 +17,15 @@ import ProgressReporting from '../Components/EmployeeDashboardContent/ProgressRe
 import Collaboration from '../Components/EmployeeDashboardContent/Collaboration';
 import DefaultContent from '../Components/EmployeeDashboardContent/DefaultContent';
 import logo from '../assets/logo1.png';
+import NotificationBell from './NotificationBell';
+import { toast } from 'react-toastify';
 
 const Dashboard = () => {
   const [activeContent, setActiveContent] = useState('default');
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const navigate = useNavigate();
   const name = localStorage.getItem('name');
+  const team = localStorage.getItem('team');
 
   const handleLogout = async () => {
     try {
@@ -36,9 +40,10 @@ const Dashboard = () => {
         localStorage.clear();
         navigate('/', { replace: true });
       } else {
-        console.error('Logout failed:', data.message || 'Unknown error');
+        toast.error(data.message || 'Logout failed');
       }
     } catch (err) {
+      toast.error('Logout error. Please try again.');
       console.error('Logout error:', err);
     }
   };
@@ -84,6 +89,7 @@ const Dashboard = () => {
           <button 
             onClick={toggleSidebar} 
             className="p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors"
+            aria-label={isSidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
           >
             {isSidebarExpanded ? <FiX size={20} /> : <FiMenu size={20} />}
           </button>
@@ -96,6 +102,7 @@ const Dashboard = () => {
                 <button 
                   onClick={() => setActiveContent(item.id)} 
                   className={`flex items-center w-full p-4 rounded-xl transition-colors ${activeContent === item.id ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}`}
+                  aria-label={item.label}
                 >
                   <span className={`${activeContent === item.id ? 'text-blue-600' : 'text-gray-500'}`}>
                     {item.icon}
@@ -113,6 +120,7 @@ const Dashboard = () => {
           <button 
             onClick={handleLogout} 
             className="flex items-center w-full p-4 rounded-xl text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors"
+            aria-label="Logout"
           >
             <FiLogOut size={20} />
             {isSidebarExpanded && (
@@ -125,23 +133,33 @@ const Dashboard = () => {
       {/* Main Content */}
       <div className="flex-1 overflow-auto">
         <div className="p-8">
+          {/* Header Section */}
           <div className="mb-8 flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm">
             <h1 className="text-2xl font-bold text-gray-800">
               {sidebarItems.find(item => item.id === activeContent)?.label}
             </h1>
             <div className="flex items-center space-x-4">
+              <div className="relative">
+                <NotificationBell team={team} />
+              </div>
               <div className="flex items-center space-x-3">
-                <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold shadow-sm">
+                <div 
+                  className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold shadow-sm"
+                  aria-label="User avatar"
+                >
                   {getInitials(name)}
                 </div>
                 {isSidebarExpanded && (
                   <div className="text-right">
                     <p className="text-sm font-medium text-gray-700">{name}</p>
+                    <p className="text-xs text-gray-500">{team}</p>
                   </div>
                 )}
               </div>
             </div>
           </div>
+
+          {/* Main Content Area */}
           <div className="bg-white p-6 rounded-2xl shadow-sm">
             {renderContent()}
           </div>

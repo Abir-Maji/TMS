@@ -20,6 +20,7 @@ const employeeRegister = require('./routes/employee');
 const fetchRoutes = require('./routes/taskFetch');
 const authRoutes = require('./routes/auth');
 const teamRoutes = require('./routes/teamRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 dotenv.config();
 
@@ -117,6 +118,7 @@ connectDB().then(async () => {
   app.use('/api/register', employeeRegister);
   app.use('/api/fetch', fetchRoutes);
   app.use('/api/teams', teamRoutes);
+  app.use('/api/notifications', notificationRoutes);
 
   mongoose.connection.on('connected', () => {
     console.log('MongoDB connected:', mongoose.connection.host);
