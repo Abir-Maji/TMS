@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FiHome, 
@@ -20,12 +20,24 @@ import logo from '../assets/logo1.png';
 import NotificationBell from './NotificationBell';
 import { toast } from 'react-toastify';
 
+
 const Dashboard = () => {
   const [activeContent, setActiveContent] = useState('default');
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const name = localStorage.getItem('name');
   const team = localStorage.getItem('team');
+
+  useEffect(() => {
+    // Set user data for ChatIcon
+    setUser({
+      _id: localStorage.getItem('userId'),
+      role: 'employee',
+      name: name,
+      team: team
+    });
+  }, [name, team]);
 
   const handleLogout = async () => {
     try {
@@ -164,6 +176,7 @@ const Dashboard = () => {
             {renderContent()}
           </div>
         </div>
+      
       </div>
     </div>
   );

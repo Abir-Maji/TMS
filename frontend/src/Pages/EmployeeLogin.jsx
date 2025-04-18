@@ -67,73 +67,141 @@ const EmployeeLogin = () => {
         }
     };
 
+    const handleBack = () => {
+        navigate(-1); // Go back to previous page
+    };
+
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-200">
-            <div className="min-h-max rounded-3xl flex items-center justify-center bg-white shadow-lg">
-                <div className="bg-white p-8">
-                    <img src={login} alt="Employee Login" className="w-full max-w-xs h-auto" />
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+            <div className="w-full max-w-4xl bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
+                {/* Left Side - Illustration */}
+                <div className="md:w-1/2 bg-gradient-to-br from-blue-600 to-indigo-700 p-8 flex flex-col justify-center items-center text-white">
+                    <img 
+                        src={login} 
+                        alt="Employee Login" 
+                        className="w-3/4 max-w-xs h-auto mb-8" 
+                    />
+                    <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
+                    <p className="text-blue-100 text-center">
+                        Log in to access your dashboard and view your tasks efficiently.
+                    </p>
                 </div>
-                <div className="bg-white p-8 w-full max-w-md">
-                    <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Employee Login</h2>
+                
+                {/* Right Side - Form */}
+                <div className="md:w-1/2 p-10 flex flex-col justify-center relative">
+                    {/* Back Button */}
+                    <button 
+                        onClick={handleBack}
+                        className="absolute top-4 left-4 flex items-center text-gray-600 hover:text-blue-600 transition-colors"
+                    >
+                        <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Back
+                    </button>
+
+                    <div className="text-center mb-8">
+                        <h2 className="text-3xl font-bold text-gray-800 mb-2">Employee Login</h2>
+                        <p className="text-gray-600">Enter your credentials to continue</p>
+                    </div>
 
                     {error && (
-                        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                            {error}
+                        <div className="mb-6 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 rounded">
+                            <div className="flex items-center">
+                                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                </svg>
+                                <span>{error}</span>
+                            </div>
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit}>
-                        <div className="mb-4">
-                            <label htmlFor="username" className="block text-gray-700 font-medium mb-2">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div>
+                            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
                                 Username
                             </label>
-                            <input
-                                type="text"
-                                id="username"
-                                className="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Enter your username"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                required
-                                autoComplete="username"
-                                aria-describedby="username-help"
-                            />
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <input
+                                    type="text"
+                                    id="username"
+                                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150"
+                                    placeholder="Enter your username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    required
+                                    autoComplete="username"
+                                    aria-describedby="username-help"
+                                />
+                            </div>
                         </div>
 
-                        <div className="mb-6">
-                            <label htmlFor="password" className="block text-gray-700 font-medium mb-2">
+                        <div>
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                                 Password
                             </label>
-                            <input
-                                type="password"
-                                id="password"
-                                className="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Enter your password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                autoComplete="current-password"
-                                aria-describedby="password-help"
-                            />
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <input
+                                    type="password"
+                                    id="password"
+                                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150"
+                                    placeholder="Enter your password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                    autoComplete="current-password"
+                                    aria-describedby="password-help"
+                                />
+                            </div>
                         </div>
 
-                        <button
-                            type="submit"
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 transition-colors"
-                            disabled={isLoading}
-                            aria-busy={isLoading}
-                        >
-                            {isLoading ? (
-                                <span className="flex items-center justify-center">
-                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    Logging in...
-                                </span>
-                            ) : 'Login'}
-                        </button>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                                <input
+                                    id="remember-me"
+                                    name="remember-me"
+                                    type="checkbox"
+                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                />
+                                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                                    Remember me
+                                </label>
+                            </div>
+
+                            
+                        </div>
+
+                        <div>
+                            <button
+                                type="submit"
+                                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 disabled:opacity-50"
+                                disabled={isLoading}
+                                aria-busy={isLoading}
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Signing in...
+                                    </>
+                                ) : 'Sign in'}
+                            </button>
+                        </div>
                     </form>
+
+                    
                 </div>
             </div>
         </div>

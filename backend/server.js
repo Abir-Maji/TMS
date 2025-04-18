@@ -22,6 +22,7 @@ const authRoutes = require('./routes/auth');
 const teamRoutes = require('./routes/teamRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 
+
 dotenv.config();
 
 // Initialize Express app
@@ -62,7 +63,8 @@ connectDB().then(async () => {
       store: store,
       cookie: {
         maxAge: 24 * 60 * 60 * 1000,
-        secure: process.env.NODE_ENV === 'production',
+        // secure: process.env.NODE_ENV === 'production',
+        secure:false,
         sameSite: 'lax',
         httpOnly: true
       }
@@ -76,19 +78,59 @@ connectDB().then(async () => {
   const io = new Server(httpServer, {
     cors: {
       origin: "http://localhost:5173",
+      credentials: true,
       methods: ["GET", "POST"]
     }
   });
 
+  // Store connected users
+  const connectedUsers = new Map();
+
   io.on('connection', (socket) => {
     console.log('User connected via WebSocket');
+    
+    // Handle user registration (store their socket ID)
+    socket.on('register-user', ({ userId, userType }) => {
+      connectedUsers.set(`${userType}-${userId}`, socket.id);
+      console.log(`User registered: ${userType}-${userId}`);
+    });
+
+    // Handle task updates
     socket.on('task-updated', (taskId) => {
       io.emit('refresh-tasks', taskId);
     });
+
+    // Handle messaging
+    socket.on('send-message', (message) => {
+      const receiverKey = `${message.receiverModel}-${message.receiver}`;
+      const receiverSocketId = connectedUsers.get(receiverKey);
+      
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit('new-message', message);
+      }
+      
+      // Also send to sender for their own UI update
+      const senderKey = `${message.senderModel}-${message.sender}`;
+      const senderSocketId = connectedUsers.get(senderKey);
+      if (senderSocketId) {
+        io.to(senderSocketId).emit('new-message', message);
+      }
+    });
+
     socket.on('disconnect', () => {
-      console.log('User disconnected');
+      // Remove user from connected users map
+      for (const [key, value] of connectedUsers.entries()) {
+        if (value === socket.id) {
+          connectedUsers.delete(key);
+          console.log(`User disconnected: ${key}`);
+          break;
+        }
+      }
     });
   });
+
+  // Make io accessible to routes
+  app.set('io', io);
 
   // Task Migration (if needed)
   if (process.env.RUN_TASK_MIGRATION === 'true') {
@@ -108,7 +150,7 @@ connectDB().then(async () => {
   }
 
   // Routes
-  app.use('/api/auth', authRoutes); // Removed (store) parameter
+  app.use('/api/auth', authRoutes);
   app.use('/api/tasks', taskRoutes);
   app.use('/api/control', employeeController);
   app.use('/api/employee/tasks', employeeTaskRoutes);

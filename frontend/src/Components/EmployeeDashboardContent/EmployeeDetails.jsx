@@ -68,7 +68,7 @@ const EmployeeProfile = () => {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:5000/api/employee/change-password/${username}`, {
+      const response = await fetch(`http://localhost:5000/api/control/change-password/${username}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

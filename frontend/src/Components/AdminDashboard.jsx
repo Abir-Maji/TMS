@@ -27,22 +27,30 @@ const AdminDashboard = () => {
   const [activeContent, setActiveContent] = useState('default');
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [adminName, setAdminName] = useState('');
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchAdminName = async () => {
+    const fetchAdminData = async () => {
       try {
         const nameFromStorage = localStorage.getItem('username') || 
                                localStorage.getItem('name') || 
                                'Admin';
         setAdminName(nameFromStorage);
+
+        // Set user data for ChatIcon
+        setUser({
+          _id: localStorage.getItem('userId'),
+          role: 'admin',
+          name: nameFromStorage
+        });
       } catch (error) {
-        console.error('Error fetching admin name:', error);
+        console.error('Error fetching admin data:', error);
         setAdminName('Admin');
       }
     };
 
-    fetchAdminName();
+    fetchAdminData();
   }, []);
 
   const handleLogout = async () => {
@@ -56,6 +64,7 @@ const AdminDashboard = () => {
         localStorage.removeItem('authToken');
         localStorage.removeItem('username');
         localStorage.removeItem('name');
+        localStorage.removeItem('userId');
         navigate('/login');
       } else {
         console.error('Logout failed');
@@ -207,6 +216,8 @@ const AdminDashboard = () => {
             {renderContent()}
           </div>
         </div>
+        {/* Add ChatIcon component here */}
+        
       </div>
     </div>
   );
