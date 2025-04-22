@@ -59,9 +59,6 @@ const LandingPage = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               />
-              <span className="text-xl font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                TaskFlow
-              </span>
             </Link>
             <div className="hidden md:flex items-center space-x-8">
               <Link 
@@ -185,7 +182,7 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             ref={ref}
-            initial="hidden"
+            initial=""
             animate={controls}
             variants={container}
             className="text-center mb-16"
@@ -200,7 +197,7 @@ const LandingPage = () => {
           
           <motion.div
             ref={ref}
-            initial="hidden"
+            initial=""
             animate={controls}
             variants={container}
             className="grid md:grid-cols-3 gap-8"

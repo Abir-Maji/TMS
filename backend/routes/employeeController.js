@@ -148,30 +148,29 @@ router.delete('/employees/:id',  async (req, res) => {
   }
 });
 
-// Password change endpoint (improved with bcrypt)
-router.put('/change-password',  async (req, res) => {
+// Update password change endpoint to handle username
+router.put('/change-password/:username', async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    const employee = await Employee.findById(req.user.id);
+    const { username } = req.params;
 
+    const employee = await Employee.findOne({ username });
     if (!employee) {
-      return res.status(404).json({ message: 'Employee not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
-    // Verify current password (using bcrypt in production)
-    const isMatch = currentPassword === employee.password; // Replace with bcrypt.compare in production
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Current password is incorrect' });
+    // Plain text comparison (for testing only)
+    if (currentPassword !== employee.password) {
+      return res.status(400).json({ message: "Current password is incorrect" });
     }
 
-    // Update password (use bcrypt.hash in production)
-    employee.password = newPassword;
+    employee.password = newPassword; // Store plain text (INSECURE)
     await employee.save();
 
-    res.json({ message: 'Password updated successfully' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    res.json({ message: "Password updated successfully" });
+  } catch (err) {
+    console.error("Password update error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 

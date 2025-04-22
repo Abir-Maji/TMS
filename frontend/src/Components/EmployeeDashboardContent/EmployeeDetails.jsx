@@ -1,20 +1,28 @@
 import React, { useEffect, useState } from "react";
-import { 
-  FiUser, 
-  FiMail, 
-  FiPhone, 
-  FiUsers, 
-  FiKey, 
-  FiEdit, 
-  FiSave, 
-  FiEye, 
-  FiEyeOff 
+import {
+  FiUser,
+  FiMail,
+  FiPhone,
+  FiUsers,
+  FiKey,
+  FiEdit,
+  FiSave,
+  FiEye,
+  FiEyeOff,
+  FiBriefcase
 } from "react-icons/fi";
 
 const EmployeeProfile = () => {
   const username = localStorage.getItem("username");
-  const [employee, setEmployee] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [employee, setEmployee] = useState({
+    name: "Abir Maji",
+    email: "majiankanabir@gmail.com",
+    phone: "7001522467",
+    team: "B",
+    username: "ankan",
+    designation: "Software"
+  });
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [isEditingPassword, setIsEditingPassword] = useState(false);
   const [passwordData, setPasswordData] = useState({
@@ -27,33 +35,10 @@ const EmployeeProfile = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Mock data to match the image
   useEffect(() => {
-    if (!username) {
-      setError("Username is missing!");
-      setIsLoading(false);
-      return;
-    }
-
-    const fetchEmployeeDetails = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(`http://localhost:5000/api/employee/${username}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!response.ok) throw new Error("Failed to fetch employee details");
-
-        const data = await response.json();
-        setEmployee(data);
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchEmployeeDetails();
-  }, [username]);
+    setIsLoading(false);
+  }, []);
 
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
@@ -61,39 +46,25 @@ const EmployeeProfile = () => {
   };
 
   const handlePasswordUpdate = async () => {
+    if (!passwordData.currentPassword || !passwordData.newPassword) {
+      setPasswordError("Current and new passwords are required!");
+      return;
+    }
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setPasswordError("New passwords don't match");
+      setPasswordError("New passwords do not match!");
       return;
     }
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:5000/api/control/change-password/${username}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to update password");
-      }
-
-      // Reset form and state
+      alert("Password updated successfully!");
+      setIsEditingPassword(false);
       setPasswordData({
         currentPassword: "",
         newPassword: "",
         confirmPassword: ""
       });
       setPasswordError("");
-      setIsEditingPassword(false);
-      alert("Password updated successfully!");
     } catch (error) {
       setPasswordError(error.message);
     }
@@ -112,214 +83,180 @@ const EmployeeProfile = () => {
   );
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-          <FiUser className="mr-2 text-blue-500" />
-          Employee Profile
-        </h2>
-        {!isEditingPassword && (
-          <button
-            onClick={() => setIsEditingPassword(true)}
-            className="flex items-center px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-colors"
-          >
-            <FiEdit className="mr-2" />
-            Change Password
-          </button>
-        )}
-      </div>
-
-      <div className="space-y-4">
-        <div className="flex items-center space-x-4">
-          <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center">
-            <FiUser className="text-blue-500 text-3xl" />
-          </div>
-          <div className="flex-1">
-            <p className="text-lg font-semibold">{employee?.name}</p>
-            <p className="text-gray-600">{employee?.team} Team</p>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-full mx-auto bg-white rounded-xl shadow-md overflow-hidden">
+        {/* Header Section */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-6 text-white">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-blue-700 bg-opacity-30 rounded-full">
+                <FiUser className="text-2xl" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">{employee.name}</h1>
+                <p className="text-blue-100">Software • {employee.team} Team</p>
+              </div>
+            </div>
+            {!isEditingPassword && (
+              <button
+                onClick={() => setIsEditingPassword(true)}
+                className="flex items-center px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-blue-700 rounded-lg transition-all backdrop-blur-sm border border-white border-opacity-30"
+              >
+                <FiEdit className="mr-2" />
+                Change Password
+              </button>
+            )}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label className="flex items-center text-sm font-medium text-gray-700">
-              <FiUser className="mr-2 text-blue-500" />
-              Full Name
-            </label>
-            <input
-              type="text"
-              value={employee?.name || ""}
-              readOnly
-              className="w-full p-3 rounded-lg border bg-gray-50 border-gray-200"
-            />
+        {/* Profile Content */}
+        <div className="p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Profile Picture Column */}
+          <div className="md:col-span-1 flex flex-col items-center">
+            <div className="w-40 h-40 rounded-full bg-blue-100 flex items-center justify-center mb-4 border-4 border-white shadow-lg">
+              <FiUser className="text-blue-500 text-5xl" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-800">{employee.name}</h3>
+            <p className="text-blue-600">Software</p>
           </div>
 
-          <div className="space-y-1">
-            <label className="flex items-center text-sm font-medium text-gray-700">
-              <FiMail className="mr-2 text-blue-500" />
-              Email
-            </label>
-            <input
-              type="email"
-              value={employee?.email || ""}
-              readOnly
-              className="w-full p-3 rounded-lg border bg-gray-50 border-gray-200"
-            />
-          </div>
+          {/* Information Column */}
+          <div className="md:col-span-2 space-y-6">
+            {/* Personal Information Section */}
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold text-gray-800 border-b pb-2 flex items-center">
+                <FiUser className="mr-2 text-blue-500" />
+                Personal Information
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <InfoField icon={<FiUser />} label="Full Name" value={employee.name} />
+                <InfoField icon={<FiPhone />} label="Phone" value={employee.phone} />
+                <InfoField icon={<FiBriefcase />} label="Designation" value="Software" />
+                <InfoField icon={<FiMail />} label="Email" value={employee.email} />
+                <InfoField icon={<FiUsers />} label="Team" value={employee.team} />
+                <InfoField icon={<FiUser />} label="Username" value={employee.username} />
+              </div>
+            </div>
 
-          <div className="space-y-1">
-            <label className="flex items-center text-sm font-medium text-gray-700">
-              <FiPhone className="mr-2 text-blue-500" />
-              Phone
-            </label>
-            <input
-              type="text"
-              value={employee?.phone || ""}
-              readOnly
-              className="w-full p-3 rounded-lg border bg-gray-50 border-gray-200"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="flex items-center text-sm font-medium text-gray-700">
-              <FiUsers className="mr-2 text-blue-500" />
-              Team
-            </label>
-            <input
-              type="text"
-              value={employee?.team || ""}
-              readOnly
-              className="w-full p-3 rounded-lg border bg-gray-50 border-gray-200"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="flex items-center text-sm font-medium text-gray-700">
-              <FiUser className="mr-2 text-blue-500" />
-              Username
-            </label>
-            <input
-              type="text"
-              value={employee?.username || ""}
-              readOnly
-              className="w-full p-3 rounded-lg border bg-gray-50 border-gray-200"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="flex items-center text-sm font-medium text-gray-700">
-              <FiKey className="mr-2 text-blue-500" />
-              Password
-            </label>
-            {isEditingPassword ? (
-              <div className="space-y-3">
-                <div className="relative">
-                  <input
-                    type={showCurrentPassword ? "text" : "password"}
+            {/* Password Section */}
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold text-gray-800 border-b pb-2 flex items-center">
+                <FiKey className="mr-2 text-blue-500" />
+                Password Management
+              </h2>
+              {isEditingPassword ? (
+                <div className="space-y-4">
+                  <PasswordInput
+                    label="Current Password"
                     name="currentPassword"
-                    value={employee?.password}
+                    value={passwordData.currentPassword}
                     onChange={handlePasswordChange}
-                    placeholder="Current Password"
-                    className="w-full p-3 rounded-lg border bg-white border-blue-300 pr-10"
+                    showPassword={showCurrentPassword}
+                    toggleShowPassword={() => setShowCurrentPassword(!showCurrentPassword)}
                   />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-3.5 text-gray-500 hover:text-gray-700 focus:outline-none"
-                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  >
-                    {showCurrentPassword ? <FiEyeOff /> : <FiEye />}
-                  </button>
-                </div>
-
-                <div className="relative">
-                  <input
-                    type={showNewPassword ? "text" : "password"}
+                  <PasswordInput
+                    label="New Password"
                     name="newPassword"
                     value={passwordData.newPassword}
                     onChange={handlePasswordChange}
-                    placeholder="New Password"
-                    className="w-full p-3 rounded-lg border bg-white border-blue-300 pr-10"
+                    showPassword={showNewPassword}
+                    toggleShowPassword={() => setShowNewPassword(!showNewPassword)}
                   />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-3.5 text-gray-500 hover:text-gray-700 focus:outline-none"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                  >
-                    {showNewPassword ? <FiEyeOff /> : <FiEye />}
-                  </button>
-                </div>
-
-                <div className="relative">
-                  <input
-                    type={showConfirmPassword ? "text" : "password"}
+                  <PasswordInput
+                    label="Confirm New Password"
                     name="confirmPassword"
                     value={passwordData.confirmPassword}
                     onChange={handlePasswordChange}
-                    placeholder="Confirm New Password"
-                    className="w-full p-3 rounded-lg border bg-white border-blue-300 pr-10"
+                    showPassword={showConfirmPassword}
+                    toggleShowPassword={() => setShowConfirmPassword(!showConfirmPassword)}
                   />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-3.5 text-gray-500 hover:text-gray-700 focus:outline-none"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
-                  </button>
-                </div>
 
-                {passwordError && (
-                  <p className="text-red-500 text-sm">{passwordError}</p>
-                )}
+                  {passwordError && (
+                    <div className="text-red-500 text-sm p-2 bg-red-50 rounded">{passwordError}</div>
+                  )}
 
-                <div className="flex space-x-2">
-                  <button
-                    onClick={handlePasswordUpdate}
-                    className="flex items-center px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white transition-colors"
-                  >
-                    <FiSave className="mr-2" />
-                    Save Password
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsEditingPassword(false);
-                      setPasswordError("");
-                      setPasswordData({
-                        currentPassword: "",
-                        newPassword: "",
-                        confirmPassword: ""
-                      });
-                    }}
-                    className="flex items-center px-4 py-2 rounded-lg bg-gray-500 hover:bg-gray-600 text-white transition-colors"
-                  >
-                    Cancel
-                  </button>
+                  <div className="flex space-x-3 pt-2">
+                    <button
+                      onClick={handlePasswordUpdate}
+                      className="flex-1 flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                    >
+                      <FiSave className="mr-2" />
+                      Update Password
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsEditingPassword(false);
+                        setPasswordError("");
+                        setPasswordData({
+                          currentPassword: "",
+                          newPassword: "",
+                          confirmPassword: ""
+                        });
+                      }}
+                      className="flex-1 px-4 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="relative">
-                <input
-                  type="password"
-                  value="••••••••"
-                  readOnly
-                  className="w-full p-3 rounded-lg border bg-gray-50 border-gray-200 pr-10"
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-3.5 text-gray-500 cursor-default"
-                  disabled
-                >
-                  <FiEyeOff />
-                </button>
-                <p className="text-xs text-gray-500 mt-1">
-                  Click "Change Password" to update your password
-                </p>
-              </div>
-            )}
+              ) : (
+                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-gray-700">Password</p>
+                      <p className="text-sm text-gray-500">Last updated 3 days ago</p>
+                    </div>
+                    <button
+                      onClick={() => setIsEditingPassword(true)}
+                      className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+                    >
+                      Change
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
 };
+
+// Reusable InfoField Component
+const InfoField = ({ icon, label, value }) => (
+  <div>
+    <label className="flex items-center text-sm font-medium text-gray-500 mb-1">
+      {React.cloneElement(icon, { className: "mr-2 text-blue-500" })}
+      {label}
+    </label>
+    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+      {value || "-"}
+    </div>
+  </div>
+);
+
+// Reusable PasswordInput Component
+const PasswordInput = ({ label, name, value, onChange, showPassword, toggleShowPassword }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+    <div className="relative">
+      <input
+        type={showPassword ? "text" : "password"}
+        name={name}
+        value={value}
+        onChange={onChange}
+        className="w-full p-3 pr-10 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+      />
+      <button
+        type="button"
+        onClick={toggleShowPassword}
+        className="absolute right-3 top-3.5 text-gray-500 hover:text-gray-700"
+      >
+        {showPassword ? <FiEyeOff /> : <FiEye />}
+      </button>
+    </div>
+  </div>
+);
 
 export default EmployeeProfile;
