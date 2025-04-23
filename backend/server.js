@@ -8,6 +8,7 @@ const { createServer } = require('http');
 const { Server } = require('socket.io');
 const mongoose = require('mongoose');
 const MongoStore = require('connect-mongo');
+const helmet = require('helmet');
 
 // Route imports
 const taskRoutes = require('./routes/taskRoutes');
@@ -30,18 +31,62 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 const httpServer = createServer(app);
 
-// Configure CORS based on environment
+// Enhanced CORS Configuration
 const allowedOrigins = process.env.NODE_ENV === 'production'
-  ? [process.env.FRONTEND_PROD_URL]
-  : ['http://localhost:5173'];
+  ? [
+      process.env.FRONTEND_PROD_URL,
+      'https://tms-frontend-m2zi.onrender.com',
+      'http://tms-frontend-m2zi.onrender.com' // Include both HTTP and HTTPS
+    ]
+  : [
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
+      'http://localhost:5000'
+    ];
 
-// Middleware
-app.use(cors({
-  origin: allowedOrigins,
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.error('CORS blocked for origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Accept',
+    'Origin'
+  ],
+  exposedHeaders: ['Set-Cookie', 'Date', 'ETag']
+};
+
+// Apply CORS middleware
+app.use(cors(corsOptions));
+
+// Explicitly handle preflight requests
+app.options('*', cors(corsOptions));
+
+// Security middleware
+app.use(helmet());
+app.use((req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' ws:; frame-src 'none'; object-src 'none'"
+  );
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'same-origin');
+  next();
+});
 
 app.use(express.json());
 
@@ -76,7 +121,8 @@ connectDB().then(async () => {
         maxAge: 24 * 60 * 60 * 1000,
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        httpOnly: true
+        httpOnly: true,
+        domain: process.env.NODE_ENV === 'production' ? '.onrender.com' : undefined
       }
     })
   );
@@ -84,13 +130,16 @@ connectDB().then(async () => {
   // Make store available to routes
   app.locals.store = store;
 
-  // WebSocket Setup
+  // WebSocket Setup with enhanced CORS
   const io = new Server(httpServer, {
     cors: {
       origin: allowedOrigins,
       credentials: true,
-      methods: ["GET", "POST"]
-    }
+      methods: ["GET", "POST", "PUT", "DELETE"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+      transports: ['websocket', 'polling']
+    },
+    allowEIO3: true // For Socket.IO v2 client compatibility
   });
 
   // Store connected users
@@ -159,7 +208,7 @@ connectDB().then(async () => {
     }
   }
 
-  // Routes
+  // API Routes
   app.use('/api/auth', authRoutes);
   app.use('/api/tasks', taskRoutes);
   app.use('/api/control', employeeController);
@@ -176,27 +225,37 @@ connectDB().then(async () => {
     console.log('MongoDB connected:', mongoose.connection.host);
   });
 
-  // Health Check
+  // Health Check Endpoint
   app.get('/api/health', (req, res) => {
     res.status(200).json({ 
       status: 'healthy', 
       timestamp: new Date(),
       environment: process.env.NODE_ENV || 'development',
-      database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+      database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+      memoryUsage: process.memoryUsage(),
+      uptime: process.uptime()
     });
   });
 
-  // Error Handling
+  // Error Handling Middleware
   app.use((err, req, res, next) => {
     console.error('Unhandled error:', {
       error: err.message,
       stack: err.stack,
       path: req.path,
-      method: req.method
+      method: req.method,
+      headers: req.headers,
+      body: req.body
     });
+    
+    if (err.name === 'UnauthorizedError') {
+      return res.status(401).json({ message: 'Invalid or expired token' });
+    }
+    
     res.status(500).json({ 
       message: 'Internal server error',
-      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined,
+      timestamp: new Date()
     });
   });
 
@@ -205,17 +264,15 @@ connectDB().then(async () => {
     res.status(404).json({ 
       message: 'Route not found',
       path: req.path,
-      method: req.method
+      method: req.method,
+      availableEndpoints: [
+        '/api/auth',
+        '/api/tasks',
+        '/api/employee',
+        '/api/admin',
+        '/api/health'
+      ]
     });
-  });
-
-  // Debug Route
-  app.post('/api/debug/task', (req, res) => {
-    console.log('Received task data:', {
-      body: req.body,
-      headers: req.headers
-    });
-    res.json({ received: true });
   });
 
   // Start Server
@@ -226,6 +283,8 @@ connectDB().then(async () => {
       Listening on port ${PORT}
       MongoDB: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}
       CORS allowed origins: ${allowedOrigins.join(', ')}
+      Process PID: ${process.pid}
+      Node version: ${process.version}
     `);
   });
 }).catch(err => {
@@ -233,14 +292,23 @@ connectDB().then(async () => {
   process.exit(1);
 });
 
-// Handle unhandled promise rejections
+// Process event handlers
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Rejection:', err);
   process.exit(1);
 });
 
-// Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
   process.exit(1);
+});
+
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received. Shutting down gracefully...');
+  httpServer.close(() => {
+    mongoose.connection.close(false, () => {
+      console.log('Server and database connections closed');
+      process.exit(0);
+    });
+  });
 });
