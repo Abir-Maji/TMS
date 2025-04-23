@@ -8,10 +8,12 @@ const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
   const fetchNotifications = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get('http://localhost:5000/api/tasks/admin/notifications');
+      const response = await axios.get(`${API_BASE_URL}/api/tasks/admin/notifications`);
       setNotifications(response.data.notifications || []);
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -23,7 +25,7 @@ const NotificationBell = () => {
 
   const markAllAsRead = async () => {
     try {
-      await axios.put('http://localhost:5000/api/tasks/admin/notifications/mark-read');
+      await axios.put(`${API_BASE_URL}/api/tasks/admin/notifications/mark-read`);
       setNotifications(prev => prev.map(n => ({ ...n, isNewNotification: false })));
       toast.success('Notifications marked as read');
     } catch (error) {

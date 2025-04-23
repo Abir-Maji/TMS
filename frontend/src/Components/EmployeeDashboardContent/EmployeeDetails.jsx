@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 import {
   FiUser,
   FiMail,
@@ -11,18 +12,19 @@ import {
   FiEyeOff,
   FiBriefcase
 } from "react-icons/fi";
+import { toast } from "react-toastify";
 
 const EmployeeProfile = () => {
   const username = localStorage.getItem("username");
   const [employee, setEmployee] = useState({
-    name: "Abir Maji",
-    email: "majiankanabir@gmail.com",
-    phone: "7001522467",
-    team: "B",
-    username: "ankan",
-    designation: "Software"
+    name: "",
+    email: "",
+    phone: "",
+    team: "",
+    username: "",
+    designation: ""
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isEditingPassword, setIsEditingPassword] = useState(false);
   const [passwordData, setPasswordData] = useState({
@@ -35,10 +37,32 @@ const EmployeeProfile = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Mock data to match the image
+  const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || "http://localhost:5000";
+
   useEffect(() => {
-    setIsLoading(false);
-  }, []);
+    const fetchEmployeeData = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/employee/${username}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
+        });
+        setEmployee(response.data);
+      } catch (error) {
+        console.error("Error fetching employee data:", error);
+        setError(error.response?.data?.message || "Failed to load employee data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (username) {
+      fetchEmployeeData();
+    } else {
+      setError("No user logged in");
+      setIsLoading(false);
+    }
+  }, [username]);
 
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
@@ -56,20 +80,48 @@ const EmployeeProfile = () => {
       return;
     }
 
+    if (passwordData.newPassword.length < 8) {
+      setPasswordError("Password must be at least 8 characters long!");
+      return;
+    }
+
     try {
-      alert("Password updated successfully!");
-      setIsEditingPassword(false);
-      setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: ""
-      });
-      setPasswordError("");
+      const response = await axios.put(
+        `${API_BASE_URL}/api/control/update-password`,
+        {
+          username: username,
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        toast.success("Password updated successfully!");
+        setIsEditingPassword(false);
+        setPasswordData({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: ""
+        });
+        setPasswordError("");
+      } else {
+        throw new Error(response.data.message || "Failed to update password");
+      }
     } catch (error) {
-      setPasswordError(error.message);
+      console.error("Password update error:", error);
+      setPasswordError(
+        error.response?.data?.message || 
+        error.message || 
+        "Failed to update password. Please try again."
+      );
     }
   };
-
   if (isLoading) return (
     <div className="flex justify-center items-center h-64">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -94,7 +146,7 @@ const EmployeeProfile = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold">{employee.name}</h1>
-                <p className="text-blue-100">Software • {employee.team} Team</p>
+                <p className="text-blue-100">{employee.designation} • {employee.team} Team</p>
               </div>
             </div>
             {!isEditingPassword && (
@@ -117,7 +169,7 @@ const EmployeeProfile = () => {
               <FiUser className="text-blue-500 text-5xl" />
             </div>
             <h3 className="text-xl font-semibold text-gray-800">{employee.name}</h3>
-            <p className="text-blue-600">Software</p>
+            <p className="text-blue-600">{employee.designation}</p>
           </div>
 
           {/* Information Column */}
@@ -131,7 +183,7 @@ const EmployeeProfile = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <InfoField icon={<FiUser />} label="Full Name" value={employee.name} />
                 <InfoField icon={<FiPhone />} label="Phone" value={employee.phone} />
-                <InfoField icon={<FiBriefcase />} label="Designation" value="Software" />
+                <InfoField icon={<FiBriefcase />} label="Designation" value={employee.designation} />
                 <InfoField icon={<FiMail />} label="Email" value={employee.email} />
                 <InfoField icon={<FiUsers />} label="Team" value={employee.team} />
                 <InfoField icon={<FiUser />} label="Username" value={employee.username} />

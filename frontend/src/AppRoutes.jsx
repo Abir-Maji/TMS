@@ -8,6 +8,9 @@ import AdminLogin from './Pages/AdminLogin.jsx';
 import AdminDashboard from './Components/AdminDashboard.jsx';
 import EmployeeDetails from './Components/EmployeeDashboardContent/EmployeeDetails';
 
+// Define API base URL from environment variables
+const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
+
 const AppRoutes = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [role, setRole] = useState(null);
@@ -18,7 +21,7 @@ const AppRoutes = () => {
         let isMounted = true;
         
         try {
-            const response = await fetch('http://localhost:5000/api/auth/check-session', {
+            const response = await fetch(`${API_BASE_URL}/api/auth/check-session`, {
                 credentials: 'include',
                 headers: {
                     'Accept': 'application/json',
@@ -55,7 +58,7 @@ const AppRoutes = () => {
 
     const handleLogout = async () => {
         try {
-            const response = await fetch('/api/auth/logout', {
+            const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
                 method: 'POST',
                 credentials: 'include'
             });
@@ -84,28 +87,37 @@ const AppRoutes = () => {
             
             <Route path="/EmployeeLogin" element={
                 <ErrorBoundary>
-                    <EmployeeLogin onLoginSuccess={(userRole) => {
-                        setIsAuthenticated(true);
-                        setRole(userRole);
-                        navigate('/dashboard', { replace: true });
-                    }} />
+                    <EmployeeLogin 
+                        apiBaseUrl={API_BASE_URL}
+                        onLoginSuccess={(userRole) => {
+                            setIsAuthenticated(true);
+                            setRole(userRole);
+                            navigate('/dashboard', { replace: true });
+                        }} 
+                    />
                 </ErrorBoundary>
             } />
             
             <Route path="/AdminLogin" element={
                 <ErrorBoundary>
-                    <AdminLogin onLoginSuccess={() => {
-                        setIsAuthenticated(true);
-                        setRole('admin');
-                        navigate('/admin/dashboard', { replace: true });
-                    }} />
+                    <AdminLogin 
+                        apiBaseUrl={API_BASE_URL}
+                        onLoginSuccess={() => {
+                            setIsAuthenticated(true);
+                            setRole('admin');
+                            navigate('/admin/dashboard', { replace: true });
+                        }} 
+                    />
                 </ErrorBoundary>
             } />
             
             <Route path="/dashboard" element={
                 isAuthenticated && role !== 'admin' ? (
                     <ErrorBoundary>
-                        <Dashboard onLogout={handleLogout} />
+                        <Dashboard 
+                            apiBaseUrl={API_BASE_URL}
+                            onLogout={handleLogout} 
+                        />
                     </ErrorBoundary>
                 ) : <Navigate to="/EmployeeLogin" replace />
             } />
@@ -113,14 +125,19 @@ const AppRoutes = () => {
             <Route path="/admin/dashboard" element={
                 isAuthenticated && role === 'admin' ? (
                     <ErrorBoundary>
-                        <AdminDashboard onLogout={handleLogout} />
+                        <AdminDashboard 
+                            apiBaseUrl={API_BASE_URL}
+                            onLogout={handleLogout} 
+                        />
                     </ErrorBoundary>
                 ) : <Navigate to="/AdminLogin" replace />
             } />
             
             <Route path="/employee/:username" element={
                 <ErrorBoundary>
-                    <EmployeeDetails />
+                    <EmployeeDetails 
+                        apiBaseUrl={API_BASE_URL}
+                    />
                 </ErrorBoundary>
             } />
             

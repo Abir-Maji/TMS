@@ -29,6 +29,8 @@ const Dashboard = () => {
   const name = localStorage.getItem('name');
   const team = localStorage.getItem('team');
 
+  const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || "http://localhost:5000";
+
   useEffect(() => {
     // Set user data for ChatIcon
     setUser({
@@ -41,7 +43,7 @@ const Dashboard = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/logout', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
         method: 'POST',
         credentials: 'include',
       });

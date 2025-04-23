@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import login from '../assets/login.svg';
 
-const EmployeeLogin = () => {
+const EmployeeLogin = ({ onLoginSuccess }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+
+    // Define API base URL using import.meta.env
+    const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -15,7 +18,7 @@ const EmployeeLogin = () => {
         setError(null);
 
         try {
-            const response = await fetch('http://localhost:5000/api/auth/login', {
+            const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -39,6 +42,7 @@ const EmployeeLogin = () => {
                 localStorage.setItem('name', userData.name || '');
                 localStorage.setItem('userId', userData._id || '');
 
+                onLoginSuccess(data.user.role || 'employee');
                 navigate('/dashboard', { replace: true });
                 return;
             }
@@ -50,6 +54,7 @@ const EmployeeLogin = () => {
                 localStorage.setItem('username', userData.username);
                 localStorage.setItem('team', userData.team || '');
                 localStorage.setItem('name', userData.name || '');
+                onLoginSuccess(userData.role || 'employee');
                 navigate('/dashboard', { replace: true });
                 return;
             }

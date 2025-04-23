@@ -7,4 +7,7 @@ export default defineConfig({
   plugins: [react(),
     tailwindcss(),
   ],
+  define: {
+    'import.meta.env.REACT_APP_API_BASE_URL': JSON.stringify(process.env.REACT_APP_API_BASE_URL)
+  }
 })

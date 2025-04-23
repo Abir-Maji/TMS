@@ -8,6 +8,9 @@ const NotificationBell = ({ team }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Correctly define API_BASE_URL using import.meta.env
+  const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || "http://localhost:5000";
+
   useEffect(() => {
     if (team) {
       fetchNotifications();
@@ -21,7 +24,7 @@ const NotificationBell = ({ team }) => {
   const fetchNotifications = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get('http://localhost:5000/api/notifications', {
+      const response = await axios.get(`${API_BASE_URL}/api/notifications`, {
         params: { team } // Send team as query parameter
       });
       setNotifications(response.data.notifications || []);
@@ -37,7 +40,7 @@ const NotificationBell = ({ team }) => {
 
   const markAsRead = async (taskId) => {
     try {
-      await axios.put(`http://localhost:5000/api/notifications/${taskId}/read`);
+      await axios.put(`${API_BASE_URL}/api/notifications/${taskId}/read`);
       setNotifications(prev => 
         prev.map(n => 
           n._id === taskId ? {...n, isNewNotification: false} : n
@@ -51,7 +54,7 @@ const NotificationBell = ({ team }) => {
 
   const markAllAsRead = async () => {
     try {
-      await axios.put('http://localhost:5000/api/notifications/mark-all-read', { team });
+      await axios.put(`${API_BASE_URL}/api/notifications/mark-all-read`, { team });
       setNotifications(prev => 
         prev.map(n => ({...n, isNewNotification: false}))
       );
@@ -62,8 +65,7 @@ const NotificationBell = ({ team }) => {
     }
   };
 
-  const unreadCount = notifications.filter(n => n.isNewNotification).length;
-
+  const unreadCount = notifications.filter(n => n.isNewNotification).length; 
   return (
     <div className="relative">
       <button 

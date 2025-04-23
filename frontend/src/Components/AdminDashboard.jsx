@@ -29,6 +29,7 @@ const AdminDashboard = () => {
   const [adminName, setAdminName] = useState('');
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   useEffect(() => {
     const fetchAdminData = async () => {
@@ -55,7 +56,7 @@ const AdminDashboard = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/logout', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
         method: 'POST',
         credentials: 'include'
       });

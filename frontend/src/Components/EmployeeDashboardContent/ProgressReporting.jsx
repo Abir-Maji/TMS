@@ -13,6 +13,8 @@ const ProgressReporting = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [completingTaskId, setCompletingTaskId] = useState(null);
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
     const fetchTasks = async () => {
         setIsLoading(true);
         setError(null);
@@ -21,7 +23,7 @@ const ProgressReporting = () => {
             const team = localStorage.getItem('team');
             if (!team) throw new Error('No team found. Please log in again.');
 
-            const response = await fetch(`http://localhost:5000/api/employee/tasks/by-team?team=${team.trim()}`);
+            const response = await fetch(`${API_BASE_URL}/api/employee/tasks/by-team?team=${team.trim()}`);
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Failed to fetch tasks');
@@ -56,7 +58,7 @@ const ProgressReporting = () => {
                 throw new Error('User ID not found');
             }
 
-            const response = await axios.put(`http://localhost:5000/api/tasks/${taskId}/complete`, { userId });
+            const response = await axios.put(`${API_BASE_URL}/api/tasks/${taskId}/complete`, { userId });
             
             // Update the local state to reflect completion
             setTasks(prevTasks =>
@@ -110,7 +112,7 @@ const ProgressReporting = () => {
                 updateData.status = 'in-progress';
             }
 
-            const response = await fetch(`http://localhost:5000/api/employee/tasks/update-progress/${taskId}`, {
+            const response = await fetch(`${API_BASE_URL}/api/employee/tasks/update-progress/${taskId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

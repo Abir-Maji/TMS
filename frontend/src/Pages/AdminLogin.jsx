@@ -9,21 +9,39 @@ const AdminLogin = ({ onLoginSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Define API base URL using import.meta.env
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/admin/login', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/admin/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-        credentials: 'include'
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ username, password })
       });
 
       if (response.ok) {
         const data = await response.json();
+        
+        // Store admin data in localStorage if needed
+        if (data.admin) {
+          localStorage.setItem('adminUsername', data.admin.username);
+          localStorage.setItem('adminId', data.admin._id);
+        }
+        
+        // Handle token if using JWT
+        if (data.token) {
+          localStorage.setItem('adminToken', data.token);
+        }
+        
         onLoginSuccess();
         navigate('/admin/dashboard', { replace: true });
       } else {
@@ -32,10 +50,18 @@ const AdminLogin = ({ onLoginSuccess }) => {
       }
     } catch (error) {
       console.error('Login error:', error);
-      setError(error.message || 'Login failed. Please try again.');
+      setError(
+        error.message === 'Failed to fetch' 
+          ? 'Network error. Please check your connection.'
+          : error.message || 'Login failed. Please try again.'
+      );
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleBack = () => {
+    navigate(-1); // Go back to previous page
   };
 
   return (

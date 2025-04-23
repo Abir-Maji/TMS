@@ -8,6 +8,9 @@ const TaskList = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
+
   const fetchTasks = async () => {
     setIsLoading(true);
     setError(null);
@@ -16,7 +19,7 @@ const TaskList = () => {
       const team = localStorage.getItem('team');
       if (!team) throw new Error('No team found in localStorage. Please log in again.');
 
-      const response = await fetch(`http://localhost:5000/api/employee/tasks/by-team?team=${team.trim()}`);
+      const response = await fetch(`${API_BASE_URL}/api/employee/tasks/by-team?team=${team.trim()}`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to fetch tasks');
