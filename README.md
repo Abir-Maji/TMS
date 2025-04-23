@@ -1,6 +1,6 @@
 # Task Management System (TMS) 🚀
 
-![TMS Banner](https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80)
+![Screenshot (81)](https://github.com/user-attachments/assets/9643dd9b-5100-4125-a66c-712ccb6983f1)
 
 A full-stack MERN application for efficient task management and team collaboration, featuring role-based access control, real-time updates, and intuitive UI.
 
@@ -10,10 +10,34 @@ A full-stack MERN application for efficient task management and team collaborati
 |---------|-------------|
 | ![Auth](https://img.icons8.com/fluency/48/000000/login-rounded.png) **Role-Based Auth** | Separate portals for Admins & Employees |
 | ![Tasks](https://img.icons8.com/color/48/000000/task-completed.png) **Task Management** | Create, assign, track & prioritize tasks |
-| ![Real-time](https://img.icons8.com/color/48/000000/real-time.png) **Live Updates** | Socket.IO powered notifications |
+| ![Real-time](https://img.icons8.com/fluency/48/cloud-sync.png) **Live Updates** | Socket.IO powered notifications |
 | ![Dashboard](https://img.icons8.com/color/48/000000/dashboard.png) **Analytics** | Visualize team productivity |
 
-![TMS Dashboard Preview](https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80)
+## 📸 Application Screenshots
+
+<div align="center">
+
+### 🚀 Landing Page
+![Landing Page](https://github.com/user-attachments/assets/54edde10-d780-4e55-a031-711014cb7082)
+*Modern interface with animated features and clear CTAs*
+
+### 🔐 Admin Authentication
+![Admin Login](https://github.com/user-attachments/assets/6280cc15-059a-4ad9-a0f8-05144fb93b0c)
+*Secure login portal with role-based access control*
+
+### 📊 Task Analytics Dashboard
+![Task Dashboard](https://github.com/user-attachments/assets/18699144-6ead-406e-82b0-7f4ba5b92aa7)
+*Comprehensive metrics with priority distribution and completion rates*
+
+### 👨‍💻 Employee Dashboard
+![Team Dashboard](https://github.com/user-attachments/assets/fc984151-21e9-48d6-a59f-8f82a2a66fc8)
+*Real-time team productivity monitoring with task breakdown*
+
+### 👤 Developer Profile Section
+![Profile Section](https://github.com/user-attachments/assets/ecc0ea55-4aca-459e-bff3-c2b7cf83a666)
+*Professional attribution with contact options*
+
+</div>
 
 ## 🛠 Tech Stack
 
@@ -26,7 +50,7 @@ A full-stack MERN application for efficient task management and team collaborati
 
 **Backend:**
 - Node.js + Express
-- MongoDB (Mongoose)
+- MongoDB Atlas (Mongoose)
 - JWT Authentication
 - Socket.IO (Real-time)
 
