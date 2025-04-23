@@ -178,6 +178,8 @@ const ViewEmployees = ({ authToken }) => {
             <option value="">All Teams</option>
             <option value="A">A</option>
             <option value="B">B</option>
+            <option value="C">C</option>
+
            
           </select>
         </div>
@@ -189,12 +191,18 @@ const ViewEmployees = ({ authToken }) => {
             className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="">All Designations</option>
-            <option value="Software Engineer">Software Engineer</option>
-            <option value="Senior Software Engineer">Senior Software Engineer</option>
-            <option value="Team Lead">Team Lead</option>
-            <option value="Project Manager">Project Manager</option>
-            <option value="UI/UX Designer">UI/UX Designer</option>
-          </select>
+            <option value="">Select Designation</option>
+                  <option value="Software Engineer">Software Engineer</option>
+                  <option value="Senior Software Engineer">Senior Software Engineer</option>
+                  <option value="Team Lead">Team Lead</option>
+                  <option value="Project Manager">Project Manager</option>
+                  <option value="UI/UX Designer">UI/UX Designer</option>
+                  <option value="QA Engineer">QA Engineer</option>
+                  <option value="DevOps Engineer">DevOps Engineer</option>
+                  <option value="Product Manager">Product Manager</option>
+                  <option value="HR Manager">HR Manager</option>
+                  <option value="Marketing Specialist">Marketing Specialist</option>
+                </select>
         </div>
       </div>
 
@@ -343,7 +351,7 @@ const ViewEmployees = ({ authToken }) => {
 
       {/* Update Employee Modal */}
       {isModalOpen && selectedEmployee && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0  bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
             <div className="flex justify-between items-center border-b p-4">
               <h3 className="text-lg font-semibold">Update Employee</h3>
@@ -398,10 +406,9 @@ const ViewEmployees = ({ authToken }) => {
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Select Team</option>
-                  <option value="Development">Development</option>
-                  <option value="Design">Design</option>
-                  <option value="Marketing">Marketing</option>
-                  <option value="HR">HR</option>
+                  <option value="A">A</option>
+                  <option value="B">B</option>
+                  <option value="C">C</option>
                 </select>
               </div>
 
@@ -419,6 +426,11 @@ const ViewEmployees = ({ authToken }) => {
                   <option value="Team Lead">Team Lead</option>
                   <option value="Project Manager">Project Manager</option>
                   <option value="UI/UX Designer">UI/UX Designer</option>
+                  <option value="QA Engineer">QA Engineer</option>
+                  <option value="DevOps Engineer">DevOps Engineer</option>
+                  <option value="Product Manager">Product Manager</option>
+                  <option value="HR Manager">HR Manager</option>
+                  <option value="Marketing Specialist">Marketing Specialist</option>
                 </select>
               </div>
             </div>
