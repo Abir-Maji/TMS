@@ -22,7 +22,7 @@ const authRoutes = require('./routes/auth');
 const teamRoutes = require('./routes/teamRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 
-
+// Load environment variables
 dotenv.config();
 
 // Initialize Express app
@@ -30,29 +30,40 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 const httpServer = createServer(app);
 
+// Configure CORS based on environment
+const allowedOrigins = process.env.NODE_ENV === 'production'
+  ? [process.env.FRONTEND_PROD_URL]
+  : ['http://localhost:5173'];
+
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: allowedOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 app.use(express.json());
 
 // Set mongoose strictQuery
-mongoose.set('strictQuery', false); // Add this to fix deprecation warning
+mongoose.set('strictQuery', false);
 
+// Configure session store with error handling
 const store = MongoStore.create({
   mongoUrl: process.env.MONGODB_URI,
   collectionName: 'sessions',
   ttl: 24 * 60 * 60,
-  autoRemove: 'native'
+  autoRemove: 'native',
+  crypto: {
+    secret: process.env.SESSION_SECRET
+  }
 });
 
-store.on('create', () => console.log('Session store connected'));
-store.on('error', (error) => console.error('Session store error:', error));
+store.on('error', (error) => {
+  console.error('Session store error:', error);
+});
 
-// Database Connection
+// Database Connection with retry logic
 connectDB().then(async () => {
   // Session Configuration (AFTER successful DB connection)
   app.use(
@@ -63,9 +74,8 @@ connectDB().then(async () => {
       store: store,
       cookie: {
         maxAge: 24 * 60 * 60 * 1000,
-        // secure: process.env.NODE_ENV === 'production',
-        secure:false,
-        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         httpOnly: true
       }
     })
@@ -77,7 +87,7 @@ connectDB().then(async () => {
   // WebSocket Setup
   const io = new Server(httpServer, {
     cors: {
-      origin: "http://localhost:5173",
+      origin: allowedOrigins,
       credentials: true,
       methods: ["GET", "POST"]
     }
@@ -168,7 +178,12 @@ connectDB().then(async () => {
 
   // Health Check
   app.get('/api/health', (req, res) => {
-    res.status(200).json({ status: 'healthy', timestamp: new Date() });
+    res.status(200).json({ 
+      status: 'healthy', 
+      timestamp: new Date(),
+      environment: process.env.NODE_ENV || 'development',
+      database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+    });
   });
 
   // Error Handling
@@ -198,8 +213,7 @@ connectDB().then(async () => {
   app.post('/api/debug/task', (req, res) => {
     console.log('Received task data:', {
       body: req.body,
-      headers: req.headers,
-      rawBody: req.rawBody
+      headers: req.headers
     });
     res.json({ received: true });
   });
@@ -207,9 +221,26 @@ connectDB().then(async () => {
   // Start Server
   const PORT = process.env.PORT || 5000;
   httpServer.listen(PORT, () => {
-    console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on http://localhost:${PORT}`);
+    console.log(`
+      Server running in ${process.env.NODE_ENV || 'development'} mode
+      Listening on port ${PORT}
+      MongoDB: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}
+      CORS allowed origins: ${allowedOrigins.join(', ')}
+    `);
   });
 }).catch(err => {
   console.error('Database connection failed:', err);
+  process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled Rejection:', err);
+  process.exit(1);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
   process.exit(1);
 });
