@@ -21,6 +21,7 @@ const PriorityPieChart = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   const determineTaskStatus = (task) => {
     if (task.progress === 100) return 'completed';
@@ -36,7 +37,7 @@ const PriorityPieChart = () => {
       const team = localStorage.getItem('team');
       if (!team) throw new Error('No team found in localStorage');
 
-      const response = await fetch(`http://localhost:5000/api/employee/tasks/by-team?team=${team.trim()}`, {
+      const response = await fetch(`${API_BASE_URL}/api/employee/tasks/by-team?team=${team.trim()}`, {
         credentials: 'include' // Use session-based cookie auth
       });
 

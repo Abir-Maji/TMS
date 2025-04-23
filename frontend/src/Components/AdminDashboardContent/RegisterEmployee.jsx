@@ -76,6 +76,8 @@ const RegisterEmployee = () => {
       color: 'bg-cyan-50 border-cyan-100 hover:bg-cyan-100'
     }
   ];
+  
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -96,7 +98,7 @@ const RegisterEmployee = () => {
     e.preventDefault();
     
     try {
-      const response = await fetch('http://localhost:5000/api/register/register-employee', {
+      const response = await fetch(`${API_BASE_URL}/api/register/register-employee`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

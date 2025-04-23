@@ -5,12 +5,14 @@ const Collaboration = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
   const fetchCollaborators = async (username) => {
     setIsLoading(true);
     setError(null);
     try {
       const response = await fetch(
-        `http://localhost:5000/api/collaborators/collaborators?username=${encodeURIComponent(username)}`
+        `${API_BASE_URL}/api/collaborators/collaborators?username=${encodeURIComponent(username)}`
       );
       
       if (response.status === 404) {

@@ -20,6 +20,7 @@ const TeamMembersPage = () => {
   const [selectedMember, setSelectedMember] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const team = localStorage.getItem('team');
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   useEffect(() => {
     const fetchTeamMembers = async () => {
@@ -28,7 +29,7 @@ const TeamMembersPage = () => {
           throw new Error('No team information found in local storage');
         }
 
-        const response = await fetch(`http://localhost:5000/api/teams/${team}`);
+        const response = await fetch(`${API_BASE_URL}/api/teams/${team}`);
         
         if (!response.ok) {
           const errorData = await response.json();

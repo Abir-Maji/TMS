@@ -31,12 +31,13 @@ const TaskAssignment = () => {
   const [employees, setEmployees] = useState([]);
   const [isLoadingTeams, setIsLoadingTeams] = useState(false);
   const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   useEffect(() => {
     const fetchTeams = async () => {
       setIsLoadingTeams(true);
       try {
-        const response = await fetch('http://localhost:5000/api/fetch/team');
+        const response = await fetch(`${API_BASE_URL}/api/fetch/team`);
         if (!response.ok) throw new Error('Failed to fetch teams');
         const data = await response.json();
         setTeams(data.map(team => ({ value: team, label: team })));
@@ -56,7 +57,7 @@ const TaskAssignment = () => {
       const fetchEmployees = async () => {
         setIsLoadingEmployees(true);
         try {
-          const response = await fetch(`http://localhost:5000/api/fetch/team/${formData.team}`);
+          const response = await fetch(`${API_BASE_URL}/api/fetch/team/${formData.team}`);
           if (!response.ok) throw new Error('Failed to fetch employees');
           const data = await response.json();
           setEmployees(data.map(employee => ({
@@ -145,7 +146,7 @@ const TaskAssignment = () => {
     console.log('Submitting task data:', taskData); // Debug log
   
     try {
-      const response = await fetch('http://localhost:5000/api/tasks', {
+      const response = await fetch(`${API_BASE_URL}/api/tasks`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

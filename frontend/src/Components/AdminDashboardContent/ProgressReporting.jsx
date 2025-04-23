@@ -16,11 +16,12 @@ const ProgressReporting = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   const fetchTasks = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/tasks');
+      const response = await fetch(`${API_BASE_URL}/api/tasks`);
       if (!response.ok) throw new Error('Failed to fetch tasks');
       const data = await response.json();
       // Ensure tasks is always an array

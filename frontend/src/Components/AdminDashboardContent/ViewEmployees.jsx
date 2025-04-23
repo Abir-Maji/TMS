@@ -21,6 +21,7 @@ const ViewEmployees = ({ authToken }) => {
     team: "",
     designation: ""
   });
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   useEffect(() => {
     fetchEmployees();
@@ -39,7 +40,7 @@ const ViewEmployees = ({ authToken }) => {
       }).toString();
 
       const response = await fetch(
-        `http://localhost:5000/api/control/employees?${queryParams}`,
+        `${API_BASE_URL}/api/control/employees?${queryParams}`,
         {
           headers: {
             'Authorization': `Bearer ${authToken}`,
@@ -81,7 +82,7 @@ const ViewEmployees = ({ authToken }) => {
   const handleUpdateEmployee = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/control/employees/${selectedEmployee._id}`,
+        `${API_BASE_URL}/api/control/employees/${selectedEmployee._id}`,
         {
           method: "PUT",
           headers: { 
@@ -109,7 +110,7 @@ const ViewEmployees = ({ authToken }) => {
     if (window.confirm("Are you sure you want to delete this employee?")) {
       try {
         const response = await fetch(
-          `http://localhost:5000/api/control/employees/${id}`,
+          `${API_BASE_URL}/api/control/employees/${id}`,
           { 
             method: "DELETE",
             headers: {

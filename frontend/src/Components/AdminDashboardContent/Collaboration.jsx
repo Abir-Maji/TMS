@@ -10,6 +10,7 @@ const Collaboration = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   useEffect(() => {
     fetchCollaborators();
@@ -31,7 +32,7 @@ const Collaboration = () => {
   const fetchCollaborators = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/admin/collaborators");
+      const response = await fetch(`${API_BASE_URL}/api/admin/collaborators`);
       if (!response.ok) throw new Error("Failed to fetch collaborators");
       const data = await response.json();
       setCollaborators(data);
@@ -52,7 +53,7 @@ const Collaboration = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/admin/collaborators/${selectedCollaborator._id}`,
+        `${API_BASE_URL}/api/admin/collaborators/${selectedCollaborator._id}`,
         {
           method: "PUT",
           headers: {

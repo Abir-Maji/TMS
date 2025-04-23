@@ -19,11 +19,12 @@ const DeadlineTracking = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterPriority, setFilterPriority] = useState('all');
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   const fetchTasks = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/tasks');
+      const response = await fetch(`${API_BASE_URL}/api/tasks`);
       if (!response.ok) throw new Error('Failed to fetch tasks');
       const data = await response.json();
       // Ensure tasks is always an array
@@ -42,7 +43,7 @@ const DeadlineTracking = () => {
   const handleDelete = async (taskId) => {
     if (window.confirm('Are you sure you want to delete this task?')) {
       try {
-        const response = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+        const response = await fetch(`${API_BASE_URL}/api/tasks/${taskId}`, {
           method: 'DELETE',
         });
         if (!response.ok) throw new Error('Failed to delete task');
@@ -57,7 +58,7 @@ const DeadlineTracking = () => {
 
   const handleUpdate = async (taskId, updatedData) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/tasks/${taskId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
