@@ -302,3 +302,13 @@ process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
   process.exit(1);
 });
+
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received. Shutting down gracefully...');
+  httpServer.close(() => {
+    mongoose.connection.close(false, () => {
+      console.log('Server and database connections closed');
+      process.exit(0);
+    });
+  });
+});
