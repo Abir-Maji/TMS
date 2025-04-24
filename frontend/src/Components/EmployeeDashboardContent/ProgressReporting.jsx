@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiCheckCircle, FiAlertTriangle, FiInfo, FiRefreshCw, FiEdit, FiSearch } from 'react-icons/fi';
+import { FiCheckCircle, FiAlertTriangle, FiInfo, FiRefreshCw, FiEdit, FiSearch, FiChevronDown } from 'react-icons/fi';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
@@ -12,8 +12,59 @@ const ProgressReporting = () => {
     const [progressValue, setProgressValue] = useState(0);
     const [searchTerm, setSearchTerm] = useState('');
     const [completingTaskId, setCompletingTaskId] = useState(null);
+    const [sortOption, setSortOption] = useState('date-newest');
+    const [isSortOpen, setIsSortOpen] = useState(false);
+    const [assignedUsers, setAssignedUsers] = useState({});
 
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+    const username = localStorage.getItem('username');
+
+    const fetchUserDetails = async (userId) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/users/${userId}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch user details');
+            }
+            const userData = await response.json();
+            return userData.username || 'Unknown User';
+        } catch (error) {
+            console.error('Error fetching user details:', error);
+            return 'Unknown User';
+        }
+    };
+
+    const processAssignedUsers = async (taskData) => {
+        const processedTasks = [];
+        const userCache = { ...assignedUsers };
+
+        for (const task of taskData) {
+            if (task.assignedTo && task.assignedTo.length > 0) {
+                const userNames = [];
+                for (const userId of task.assignedTo) {
+                    if (!userCache[userId]) {
+                        userCache[userId] = await fetchUserDetails(userId);
+                    }
+                    userNames.push(userCache[userId]);
+                }
+                task.assignedUsers = userNames.join(', ');
+            } else {
+                task.assignedUsers = 'Unassigned';
+            }
+
+            if (task.completedBy && !userCache[task.completedBy]) {
+                userCache[task.completedBy] = await fetchUserDetails(task.completedBy);
+            }
+
+            processedTasks.push({
+                ...task,
+                status: task.progress === 100 ? 'completed' : (task.status || 'in-progress'),
+                completedByName: task.completedBy ? userCache[task.completedBy] : null
+            });
+        }
+
+        setAssignedUsers(userCache);
+        return processedTasks;
+    };
 
     const fetchTasks = async () => {
         setIsLoading(true);
@@ -35,12 +86,9 @@ const ProgressReporting = () => {
                 setTasks([]);
                 setFilteredTasks([]);
             } else {
-                const processedTasks = data.tasks.map(task => ({
-                    ...task,
-                    status: task.progress === 100 ? 'completed' : (task.status || 'in-progress')
-                }));
+                const processedTasks = await processAssignedUsers(data.tasks);
                 setTasks(processedTasks);
-                setFilteredTasks(processedTasks);
+                handleSort('date-newest', processedTasks);
             }
         } catch (error) {
             console.error('Error fetching tasks:', error);
@@ -53,14 +101,15 @@ const ProgressReporting = () => {
     const completeTask = async (taskId) => {
         try {
             setCompletingTaskId(taskId);
-            const userId = localStorage.getItem('userId');
-            if (!userId) {
+            const username = localStorage.getItem('username');
+            if (!username) {
                 throw new Error('User ID not found');
             }
 
-            const response = await axios.put(`${API_BASE_URL}/api/tasks/${taskId}/complete`, { userId });
+            const response = await axios.put(`${API_BASE_URL}/api/tasks/${taskId}/complete`, { username });
             
-            // Update the local state to reflect completion
+            const completedByName = localStorage.getItem('username') || 'Unknown User';
+            
             setTasks(prevTasks =>
                 prevTasks.map(task =>
                     task._id === taskId ? { 
@@ -68,6 +117,8 @@ const ProgressReporting = () => {
                         progress: 100,
                         status: 'completed',
                         completedAt: new Date().toISOString(),
+                        completedBy: username,
+                        completedByName,
                         isNewNotification: true
                     } : task
                 )
@@ -80,6 +131,8 @@ const ProgressReporting = () => {
                         progress: 100,
                         status: 'completed',
                         completedAt: new Date().toISOString(),
+                        completedBy: username,
+                        completedByName,
                         isNewNotification: true
                     } : task
                 )
@@ -89,7 +142,6 @@ const ProgressReporting = () => {
         } catch (error) {
             console.error('Error completing task:', error);
             toast.error(error.response?.data?.message || 'Failed to complete task');
-            // Revert the checkbox state if the API call fails
             fetchTasks();
         } finally {
             setCompletingTaskId(null);
@@ -108,6 +160,8 @@ const ProgressReporting = () => {
             if (newProgress === 100) {
                 updateData.status = 'completed';
                 updateData.completedAt = new Date().toISOString();
+                updateData.completedBy = localStorage.getItem('userId');
+                updateData.completedByName = localStorage.getItem('username') || 'Unknown User';
             } else {
                 updateData.status = 'in-progress';
             }
@@ -128,7 +182,8 @@ const ProgressReporting = () => {
 
             const finalTask = {
                 ...updatedTask.task,
-                status: newProgress === 100 ? 'completed' : 'in-progress'
+                status: newProgress === 100 ? 'completed' : 'in-progress',
+                completedByName: newProgress === 100 ? (localStorage.getItem('username') || 'Unknown User') : null
             };
 
             setTasks(prevTasks =>
@@ -194,15 +249,72 @@ const ProgressReporting = () => {
         setSearchTerm(term);
         
         if (term === '') {
-            setFilteredTasks(tasks);
+            handleSort(sortOption, tasks);
         } else {
             const filtered = tasks.filter(task => 
                 task.title.toLowerCase().includes(term) ||
                 task.description.toLowerCase().includes(term) ||
                 task.priority.toLowerCase().includes(term) ||
-                task.user.toLowerCase().includes(term)
+                (task.assignedUsers && task.assignedUsers.toLowerCase().includes(term))
             );
-            setFilteredTasks(filtered);
+            handleSort(sortOption, filtered);
+        }
+    };
+
+    const handleSort = (option, tasksToSort = filteredTasks) => {
+        setSortOption(option);
+        setIsSortOpen(false);
+        let sortedTasks = [...tasksToSort];
+
+        switch (option) {
+            case 'date-newest':
+                sortedTasks.sort((a, b) => new Date(b.currentDate) - new Date(a.currentDate));
+                break;
+            case 'date-oldest':
+                sortedTasks.sort((a, b) => new Date(a.currentDate) - new Date(b.currentDate));
+                break;
+            case 'deadline-asc':
+                sortedTasks.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+                break;
+            case 'deadline-desc':
+                sortedTasks.sort((a, b) => new Date(b.deadline) - new Date(a.deadline));
+                break;
+            case 'progress-high':
+                sortedTasks.sort((a, b) => b.progress - a.progress);
+                break;
+            case 'progress-low':
+                sortedTasks.sort((a, b) => a.progress - b.progress);
+                break;
+            case 'priority-high':
+                sortedTasks.sort((a, b) => {
+                    const priorityOrder = { high: 1, medium: 2, low: 3 };
+                    return priorityOrder[a.priority.toLowerCase()] - priorityOrder[b.priority.toLowerCase()];
+                });
+                break;
+            case 'priority-low':
+                sortedTasks.sort((a, b) => {
+                    const priorityOrder = { high: 1, medium: 2, low: 3 };
+                    return priorityOrder[b.priority.toLowerCase()] - priorityOrder[a.priority.toLowerCase()];
+                });
+                break;
+            default:
+                sortedTasks = [...tasksToSort];
+        }
+
+        setFilteredTasks(sortedTasks);
+    };
+
+    const getSortLabel = (option) => {
+        switch (option) {
+            case 'date-newest': return 'Newest First';
+            case 'date-oldest': return 'Oldest First';
+            case 'deadline-asc': return 'Deadline (Soonest)';
+            case 'deadline-desc': return 'Deadline (Latest)';
+            case 'progress-high': return 'Progress (High)';
+            case 'progress-low': return 'Progress (Low)';
+            case 'priority-high': return 'Priority (High)';
+            case 'priority-low': return 'Priority (Low)';
+            default: return 'Sort by';
         }
     };
 
@@ -212,37 +324,118 @@ const ProgressReporting = () => {
 
     return (
         <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
-            <div className="max-w-4xl mx-auto">
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-800">
-                        Task Progress Dashboard
-                    </h2>
-                    <button
-                        onClick={fetchTasks}
-                        disabled={isLoading}
-                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                        <FiRefreshCw className={`mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                        Refresh
-                    </button>
-                </div>
-
-                <div className="relative mb-6">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <FiSearch className="text-gray-400" />
+            <div className="max-w-6xl mx-auto">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-800">Task Progress Dashboard</h2>
+                        <p className="text-gray-600 mt-1">Track and update your team's task progress</p>
                     </div>
-                    <input
-                        type="text"
-                        placeholder="Search tasks by title, description, or priority..."
-                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        value={searchTerm}
-                        onChange={handleSearch}
-                    />
-                    {searchTerm && (
-                        <span className="absolute right-3 top-2 text-sm text-gray-500">
-                            {filteredTasks.length} {filteredTasks.length === 1 ? 'result' : 'results'}
-                        </span>
-                    )}
+                    
+                    <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                        <div className="relative flex-1 max-w-md">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <FiSearch className="text-gray-400" />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Search tasks..."
+                                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                value={searchTerm}
+                                onChange={handleSearch}
+                            />
+                            {searchTerm && (
+                                <span className="absolute right-3 top-2 text-sm text-gray-500">
+                                    {filteredTasks.length} {filteredTasks.length === 1 ? 'result' : 'results'}
+                                </span>
+                            )}
+                        </div>
+
+                        <div className="flex gap-3">
+                            <div className="relative">
+                                <button
+                                    onClick={() => setIsSortOpen(!isSortOpen)}
+                                    className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    {getSortLabel(sortOption)}
+                                    <FiChevronDown className={`ml-2 transition-transform ${isSortOpen ? 'transform rotate-180' : ''}`} />
+                                </button>
+                                
+                                {isSortOpen && (
+                                    <div className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                        <div className="py-1">
+                                            <div className="px-3 py-1 text-xs text-gray-500 uppercase font-medium">Date</div>
+                                            <button
+                                                onClick={() => handleSort('date-newest')}
+                                                className={`block px-4 py-2 text-sm w-full text-left ${sortOption === 'date-newest' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100'}`}
+                                            >
+                                                Newest First
+                                            </button>
+                                            <button
+                                                onClick={() => handleSort('date-oldest')}
+                                                className={`block px-4 py-2 text-sm w-full text-left ${sortOption === 'date-oldest' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100'}`}
+                                            >
+                                                Oldest First
+                                            </button>
+                                            
+                                            <div className="border-t border-gray-200 my-1"></div>
+                                            <div className="px-3 py-1 text-xs text-gray-500 uppercase font-medium">Deadline</div>
+                                            <button
+                                                onClick={() => handleSort('deadline-asc')}
+                                                className={`block px-4 py-2 text-sm w-full text-left ${sortOption === 'deadline-asc' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100'}`}
+                                            >
+                                                Deadline (Soonest)
+                                            </button>
+                                            <button
+                                                onClick={() => handleSort('deadline-desc')}
+                                                className={`block px-4 py-2 text-sm w-full text-left ${sortOption === 'deadline-desc' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100'}`}
+                                            >
+                                                Deadline (Latest)
+                                            </button>
+                                            
+                                            <div className="border-t border-gray-200 my-1"></div>
+                                            <div className="px-3 py-1 text-xs text-gray-500 uppercase font-medium">Progress</div>
+                                            <button
+                                                onClick={() => handleSort('progress-high')}
+                                                className={`block px-4 py-2 text-sm w-full text-left ${sortOption === 'progress-high' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100'}`}
+                                            >
+                                                Progress (High)
+                                            </button>
+                                            <button
+                                                onClick={() => handleSort('progress-low')}
+                                                className={`block px-4 py-2 text-sm w-full text-left ${sortOption === 'progress-low' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100'}`}
+                                            >
+                                                Progress (Low)
+                                            </button>
+                                            
+                                            <div className="border-t border-gray-200 my-1"></div>
+                                            <div className="px-3 py-1 text-xs text-gray-500 uppercase font-medium">Priority</div>
+                                            <button
+                                                onClick={() => handleSort('priority-high')}
+                                                className={`block px-4 py-2 text-sm w-full text-left ${sortOption === 'priority-high' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100'}`}
+                                            >
+                                                Priority (High)
+                                            </button>
+                                            <button
+                                                onClick={() => handleSort('priority-low')}
+                                                className={`block px-4 py-2 text-sm w-full text-left ${sortOption === 'priority-low' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100'}`}
+                                            >
+                                                Priority (Low)
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <button
+                                onClick={fetchTasks}
+                                disabled={isLoading}
+                                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            >
+                                <FiRefreshCw className={`mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 {isLoading ? (
@@ -310,11 +503,11 @@ const ProgressReporting = () => {
 
                                     <div className="flex justify-between items-center">
                                         <div className="text-sm text-gray-500">
-                                            <span>Assigned to: {task.user} • Deadline: {new Date(task.deadline).toLocaleDateString()}</span>
+                                            <span>Assigned to: {task.users} • Deadline: {new Date(task.deadline).toLocaleDateString()}</span>
                                             {task.progress === 100 && task.completedAt && (
                                                 <span className="block text-green-600 mt-1">
                                                     Completed on: {new Date(task.completedAt).toLocaleString()}
-                                                    {task.completedBy && ` by ${task.completedBy}`}
+                                                    {task.completedByName && ` by ${task.completedBy}`}
                                                 </span>
                                             )}
                                         </div>

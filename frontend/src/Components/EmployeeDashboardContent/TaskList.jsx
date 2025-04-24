@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiClock, FiCalendar, FiUsers, FiUser, FiAlertTriangle, FiAlertCircle, FiCheckCircle, FiSearch } from 'react-icons/fi';
+import { FiClock, FiCalendar, FiUsers, FiUser, FiAlertTriangle, FiAlertCircle, FiCheckCircle, FiSearch, FiChevronDown } from 'react-icons/fi';
 
 const TaskList = () => {
   const [tasks, setTasks] = useState([]);
@@ -7,9 +7,10 @@ const TaskList = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortOption, setSortOption] = useState('date-newest'); // Default to newest first
+  const [isSortOpen, setIsSortOpen] = useState(false);
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-
 
   const fetchTasks = async () => {
     setIsLoading(true);
@@ -77,40 +78,156 @@ const TaskList = () => {
         task.title.toLowerCase().includes(term) ||
         task.description.toLowerCase().includes(term) ||
         task.priority.toLowerCase().includes(term) ||
-        (task.users && task.users.toLowerCase().includes(term)) || // Changed from task.user to task.users
+        (task.users && task.users.toLowerCase().includes(term)) ||
         task.team.toLowerCase().includes(term)
       );
       setFilteredTasks(filtered);
     }
   };
 
+  const handleSort = (option) => {
+    setSortOption(option);
+    setIsSortOpen(false);
+    let sortedTasks = [...filteredTasks];
+
+    switch (option) {
+      case 'priority-high':
+        sortedTasks.sort((a, b) => {
+          const priorityOrder = { high: 1, medium: 2, low: 3 };
+          return priorityOrder[a.priority.toLowerCase()] - priorityOrder[b.priority.toLowerCase()];
+        });
+        break;
+      case 'priority-low':
+        sortedTasks.sort((a, b) => {
+          const priorityOrder = { high: 1, medium: 2, low: 3 };
+          return priorityOrder[b.priority.toLowerCase()] - priorityOrder[a.priority.toLowerCase()];
+        });
+        break;
+      case 'date-newest':
+        sortedTasks.sort((a, b) => new Date(b.currentDate) - new Date(a.currentDate));
+        break;
+      case 'date-oldest':
+        sortedTasks.sort((a, b) => new Date(a.currentDate) - new Date(b.currentDate));
+        break;
+      case 'deadline-asc':
+        sortedTasks.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+        break;
+      case 'deadline-desc':
+        sortedTasks.sort((a, b) => new Date(b.deadline) - new Date(a.deadline));
+        break;
+      default:
+        sortedTasks = [...tasks].filter(task => 
+          searchTerm === '' || 
+          task.title.toLowerCase().includes(searchTerm) ||
+          task.description.toLowerCase().includes(searchTerm) ||
+          task.priority.toLowerCase().includes(searchTerm) ||
+          (task.users && task.users.toLowerCase().includes(searchTerm)) ||
+          task.team.toLowerCase().includes(searchTerm)
+        );
+    }
+
+    setFilteredTasks(sortedTasks);
+  };
+
   useEffect(() => {
     fetchTasks();
   }, []);
 
-  return (
-    <div className="p-4">
-      <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-        Your Team Tasks
-      </h2>
+  useEffect(() => {
+    handleSort(sortOption);
+  }, [tasks, searchTerm]);
 
-      {/* Search Bar */}
-      <div className="relative mb-6 max-w-md mx-auto">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <FiSearch className="text-gray-400" />
+  const getSortLabel = (option) => {
+    switch (option) {
+      case 'priority-high': return 'Priority (High to Low)';
+      case 'priority-low': return 'Priority (Low to High)';
+      case 'date-newest': return 'Newest First';
+      case 'date-oldest': return 'Oldest First';
+      case 'deadline-asc': return 'Deadline (Soonest)';
+      case 'deadline-desc': return 'Deadline (Latest)';
+      default: return 'Sort by';
+    }
+  };
+
+  return (
+    <div className="p-4 max-w-7xl mx-auto">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-800 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Team Tasks
+          </h2>
+          <p className="text-gray-600 mt-1">Manage and track all team tasks in one place</p>
         </div>
-        <input
-          type="text"
-          placeholder="Search tasks..."
-          className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          value={searchTerm}
-          onChange={handleSearch}
-        />
-        {searchTerm && (
-          <span className="absolute right-3 top-2 text-sm text-gray-500">
-            {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'}
-          </span>
-        )}
+        
+        <div className="w-full md:w-auto flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1 max-w-md">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FiSearch className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search tasks..."
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              value={searchTerm}
+              onChange={handleSearch}
+            />
+          </div>
+
+          <div className="relative">
+            <button
+              onClick={() => setIsSortOpen(!isSortOpen)}
+              className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {getSortLabel(sortOption)}
+              <FiChevronDown className={`ml-2 transition-transform ${isSortOpen ? 'transform rotate-180' : ''}`} />
+            </button>
+            
+            {isSortOpen && (
+              <div className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                <div className="py-1">
+                  <button
+                    onClick={() => handleSort('date-newest')}
+                    className={`block px-4 py-2 text-sm w-full text-left ${sortOption === 'date-newest' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100'}`}
+                  >
+                    Newest First
+                  </button>
+                  <button
+                    onClick={() => handleSort('date-oldest')}
+                    className={`block px-4 py-2 text-sm w-full text-left ${sortOption === 'date-oldest' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100'}`}
+                  >
+                    Oldest First
+                  </button>
+                  <div className="border-t border-gray-200 my-1"></div>
+                  <button
+                    onClick={() => handleSort('priority-high')}
+                    className={`block px-4 py-2 text-sm w-full text-left ${sortOption === 'priority-high' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100'}`}
+                  >
+                    Priority (High to Low)
+                  </button>
+                  <button
+                    onClick={() => handleSort('priority-low')}
+                    className={`block px-4 py-2 text-sm w-full text-left ${sortOption === 'priority-low' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100'}`}
+                  >
+                    Priority (Low to High)
+                  </button>
+                  <div className="border-t border-gray-200 my-1"></div>
+                  <button
+                    onClick={() => handleSort('deadline-asc')}
+                    className={`block px-4 py-2 text-sm w-full text-left ${sortOption === 'deadline-asc' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100'}`}
+                  >
+                    Deadline (Soonest)
+                  </button>
+                  <button
+                    onClick={() => handleSort('deadline-desc')}
+                    className={`block px-4 py-2 text-sm w-full text-left ${sortOption === 'deadline-desc' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100'}`}
+                  >
+                    Deadline (Latest)
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {isLoading && (
@@ -130,7 +247,7 @@ const TaskList = () => {
           {filteredTasks.map((task) => (
             <div 
               key={task._id}
-              className={`rounded-xl overflow-hidden shadow-lg transform transition-all hover:scale-105 hover:shadow-xl`}
+              className={`rounded-xl overflow-hidden shadow-lg transform transition-all hover:scale-[1.02] hover:shadow-xl border border-gray-100`}
             >
               <div className={`h-2 bg-gradient-to-r ${getPriorityGradient(task.priority)}`}></div>
               
@@ -153,13 +270,13 @@ const TaskList = () => {
                 
                 <div className="space-y-3">
                   <div className="flex items-center text-gray-700">
-                    <FiCalendar className="mr-2 text-purple-600" />
+                    <FiCalendar className="mr-2 text-purple-600 flex-shrink-0" />
                     <span className="font-medium">Uploaded:</span>
                     <span className="ml-2">{new Date(task.currentDate).toLocaleDateString()}</span>
                   </div>
                   
                   <div className="flex items-center text-gray-700">
-                    <FiClock className="mr-2 text-purple-600" />
+                    <FiClock className="mr-2 text-purple-600 flex-shrink-0" />
                     <span className="font-medium">Deadline:</span>
                     <span className={`ml-2 ${
                       new Date(task.deadline) < new Date() ? 'text-red-600 font-bold' : ''
@@ -169,15 +286,15 @@ const TaskList = () => {
                   </div>
                   
                   <div className="flex items-center text-gray-700">
-                    <FiUsers className="mr-2 text-purple-600" />
+                    <FiUsers className="mr-2 text-purple-600 flex-shrink-0" />
                     <span className="font-medium">Team:</span>
-                    <span className="ml-2">{task.team}</span>
+                    <span className="ml-2 truncate">{task.team}</span>
                   </div>
                   
                   <div className="flex items-center text-gray-700">
-                    <FiUser className="mr-2 text-purple-600" />
+                    <FiUser className="mr-2 text-purple-600 flex-shrink-0" />
                     <span className="font-medium">Assigned to:</span>
-                    <span className="ml-2">{task.users || 'Unassigned'}</span> {/* Changed from task.user to task.users */}
+                    <span className="ml-2 truncate">{task.users || 'Unassigned'}</span>
                   </div>
                 </div>
               </div>
@@ -186,7 +303,7 @@ const TaskList = () => {
         </div>
       ) : (
         !isLoading && !error && (
-          <div className="text-center py-12">
+          <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
             <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
               {searchTerm ? (
                 <FiSearch className="text-gray-400 text-3xl" />

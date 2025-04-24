@@ -194,14 +194,14 @@ const markAllAsRead = async (req, res) => {
 };
 const completeTask = async (req, res) => {
   try {
-    const { userId } = req.body; // The user completing the task
+    const { username } = req.body; // The user completing the task
     
     const task = await Task.findByIdAndUpdate(
       req.params.id,
       {
         progress: 100,
         isCompleted: true,
-        completedBy: userId,
+        completedBy: username,
         completedAt: new Date(),
         isNewNotification: true // Flag for admin notification
       },
