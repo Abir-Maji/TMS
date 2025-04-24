@@ -29,7 +29,7 @@ const Dashboard = () => {
   const name = localStorage.getItem('name');
   const team = localStorage.getItem('team');
 
-  const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || "http://localhost:5000";
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   useEffect(() => {
     // Set user data for ChatIcon

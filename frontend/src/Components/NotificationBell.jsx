@@ -9,7 +9,7 @@ const NotificationBell = ({ team }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   // Correctly define API_BASE_URL using import.meta.env
-  const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || "http://localhost:5000";
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   useEffect(() => {
     if (team) {

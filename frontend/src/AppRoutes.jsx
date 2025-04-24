@@ -9,7 +9,7 @@ import AdminDashboard from './Components/AdminDashboard.jsx';
 import EmployeeDetails from './Components/EmployeeDashboardContent/EmployeeDetails';
 
 // Define API base URL from environment variables
-const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 const AppRoutes = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
