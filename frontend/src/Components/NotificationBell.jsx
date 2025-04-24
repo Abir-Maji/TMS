@@ -46,6 +46,12 @@ const NotificationBell = ({ team }) => {
           n._id === taskId ? {...n, isNewNotification: false} : n
         )
       );
+      // Add "Completed task" text to the notification
+      setNotifications(prev =>
+        prev.map(n =>
+          n._id === taskId ? {...n, title: `${n.title} (Completed task)`} : n
+        )
+      );
     } catch (error) {
       console.error('Error marking notification as read:', error);
       toast.error('Failed to mark notification as read');
@@ -57,6 +63,10 @@ const NotificationBell = ({ team }) => {
       await axios.put(`${API_BASE_URL}/api/notifications/mark-all-read`, { team });
       setNotifications(prev => 
         prev.map(n => ({...n, isNewNotification: false}))
+      );
+      // Add "Completed task" text to all notifications
+      setNotifications(prev =>
+        prev.map(n => ({...n, title: `${n.title} (Completed task)`}))
       );
       toast.success('All notifications marked as read');
     } catch (error) {
@@ -123,12 +133,13 @@ const NotificationBell = ({ team }) => {
                   }}
                 >
                   <div className="flex justify-between items-start">
-                    <p className="font-medium text-gray-900">{notification.title}</p>
+                    <p className="font-medium text-gray-900">Completed: {notification.title}</p>
                     {notification.isNewNotification && (
                       <span className="inline-block h-2 w-2 rounded-full bg-blue-500 ml-2"></span>
                     )}
                   </div>
                   <p className="text-xs text-gray-600 mt-1">Assigned to: {notification.users}</p>
+                  <p className="text-xs text-gray-600 mt-1">Completed by: {notification.completedBy}</p>
                   <p className="text-xs text-gray-400 mt-1">
                     {new Date(notification.createdAt).toLocaleString()}
                   </p>
