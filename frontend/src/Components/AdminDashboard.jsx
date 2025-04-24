@@ -11,7 +11,8 @@ import {
   FiX,
   FiLogOut,
   FiCalendar,
-  FiSettings
+  FiSettings,
+  FiBell
 } from 'react-icons/fi';
 import TaskAssignment from '../Components/AdminDashboardContent/TaskAssignment';
 import DeadlineTracking from '../Components/AdminDashboardContent/DeadlineTracking';
@@ -28,6 +29,7 @@ const AdminDashboard = () => {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [adminName, setAdminName] = useState('');
   const [user, setUser] = useState(null);
+  const [showDropdown, setShowDropdown] = useState(false);
   const navigate = useNavigate();
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
@@ -77,6 +79,10 @@ const AdminDashboard = () => {
 
   const toggleSidebar = () => {
     setIsSidebarExpanded(!isSidebarExpanded);
+  };
+
+  const toggleDropdown = () => {
+    setShowDropdown(!showDropdown);
   };
 
   const getInitials = (name) => {
@@ -200,14 +206,32 @@ const AdminDashboard = () => {
             </h1>
             <div className="flex items-center space-x-4">
               <NotificationBell />
-              <div className="flex items-center space-x-3">
-                <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold shadow-sm">
-                  {getInitials(adminName)}
+              <div className="relative">
+                <div 
+                  className="flex items-center space-x-3 cursor-pointer"
+                  onClick={toggleDropdown}
+                >
+                  <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold shadow-sm">
+                    {getInitials(adminName)}
+                  </div>
+                  {isSidebarExpanded && (
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-700">{adminName}</p>
+                      <p className="text-xs text-gray-500">Admin</p>
+                    </div>
+                  )}
                 </div>
-                {isSidebarExpanded && (
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-gray-700">{adminName}</p>
-                    <p className="text-xs text-gray-500">Admin</p>
+                
+                {/* Dropdown Menu */}
+                {showDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 overflow-hidden">
+                    <div 
+                      className="px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 cursor-pointer flex items-center transition-colors duration-300"
+                      onClick={handleLogout}
+                    >
+                      <FiLogOut className="mr-2" />
+                      <span>Logout</span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -217,8 +241,6 @@ const AdminDashboard = () => {
             {renderContent()}
           </div>
         </div>
-        {/* Add ChatIcon component here */}
-        
       </div>
     </div>
   );

@@ -20,11 +20,11 @@ import logo from '../assets/logo1.png';
 import NotificationBell from './NotificationBell';
 import { toast } from 'react-toastify';
 
-
 const Dashboard = () => {
   const [activeContent, setActiveContent] = useState('default');
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [user, setUser] = useState(null);
+  const [showDropdown, setShowDropdown] = useState(false);
   const navigate = useNavigate();
   const name = localStorage.getItem('name');
   const team = localStorage.getItem('team');
@@ -64,6 +64,10 @@ const Dashboard = () => {
 
   const toggleSidebar = () => {
     setIsSidebarExpanded(!isSidebarExpanded);
+  };
+
+  const toggleDropdown = () => {
+    setShowDropdown(!showDropdown);
   };
 
   const getInitials = (name) => {
@@ -156,17 +160,32 @@ const Dashboard = () => {
               <div className="relative">
                 <NotificationBell team={team} />
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="relative">
                 <div 
-                  className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold shadow-sm"
-                  aria-label="User avatar"
+                  className="flex items-center space-x-3 cursor-pointer"
+                  onClick={toggleDropdown}
                 >
-                  {getInitials(name)}
+                  <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold shadow-sm">
+                    {getInitials(name)}
+                  </div>
+                  {isSidebarExpanded && (
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-700">{name}</p>
+                      <p className="text-xs text-gray-500">{team}</p>
+                    </div>
+                  )}
                 </div>
-                {isSidebarExpanded && (
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-gray-700">{name}</p>
-                    <p className="text-xs text-gray-500">{team}</p>
+                
+                {/* Dropdown Menu */}
+                {showDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 overflow-hidden">
+                    <div 
+                      className="px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 cursor-pointer flex items-center transition-colors duration-300"
+                      onClick={handleLogout}
+                    >
+                      <FiLogOut className="mr-2" />
+                      <span>Logout</span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -178,7 +197,6 @@ const Dashboard = () => {
             {renderContent()}
           </div>
         </div>
-      
       </div>
     </div>
   );
