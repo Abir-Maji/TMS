@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import { 
   FiEdit, FiTrash2, FiUser, FiMail, FiPhone, 
   FiUsers, FiX, FiCheck, FiSearch, FiBriefcase,
-  FiChevronLeft, FiChevronRight, FiAlertCircle, FiKey, } from "react-icons/fi";
+  FiChevronLeft, FiChevronRight, FiAlertCircle, FiKey, 
+  FiEye, FiEyeOff, FiDownload } from "react-icons/fi";
+import { CSVLink } from "react-csv";
 
 const ViewEmployees = ({ authToken }) => {
   const [employees, setEmployees] = useState([]);
@@ -13,7 +15,7 @@ const ViewEmployees = ({ authToken }) => {
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 9,
+    limit: 10,
     total: 0,
     pages: 1
   });
@@ -21,11 +23,66 @@ const ViewEmployees = ({ authToken }) => {
     team: "",
     designation: ""
   });
+  const [teams, setTeams] = useState([]);
+  const [isLoadingTeams, setIsLoadingTeams] = useState(false);
+  const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState(null);
+  const [showPassword, setShowPassword] = useState({});
+  const [csvData, setCsvData] = useState([]);
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   useEffect(() => {
+    fetchTeams();
     fetchEmployees();
   }, [pagination.page, pagination.limit, filters]);
+
+  useEffect(() => {
+    // Prepare CSV data whenever employees change
+    if (employees.length > 0) {
+      const headers = [
+        { label: "Name", key: "name" },
+        { label: "Email", key: "email" },
+        { label: "Phone", key: "phone" },
+        { label: "Team", key: "team" },
+        { label: "Designation", key: "designation" },
+        { label: "Username", key: "username" }
+      ];
+
+      const data = employees.map(emp => ({
+        name: emp.name,
+        email: emp.email,
+        phone: emp.phone,
+        team: emp.team,
+        designation: emp.designation,
+        username: emp.username
+      }));
+
+      setCsvData(data);
+    }
+  }, [employees]);
+
+  const fetchTeams = async () => {
+    setIsLoadingTeams(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/fetch/team`, {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch teams');
+      }
+      const data = await response.json();
+      setTeams(data);
+    } catch (error) {
+      console.error("Error fetching teams:", error);
+      setError(error.message);
+    } finally {
+      setIsLoadingTeams(false);
+    }
+  };
 
   const fetchEmployees = async () => {
     setIsLoading(true);
@@ -106,29 +163,39 @@ const ViewEmployees = ({ authToken }) => {
     }
   };
 
-  const handleDeleteEmployee = async (id) => {
-    if (window.confirm("Are you sure you want to delete this employee?")) {
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/api/control/employees/${id}`,
-          { 
-            method: "DELETE",
-            headers: {
-              'Authorization': `Bearer ${authToken}`
-            }
+  const handleDeleteClick = (id) => {
+    setEmployeeToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteEmployee = async () => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/control/employees/${employeeToDelete}`,
+        { 
+          method: "DELETE",
+          headers: {
+            'Authorization': `Bearer ${authToken}`
           }
-        );
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to delete employee');
         }
+      );
 
-        fetchEmployees();
-      } catch (error) {
-        console.error("Error deleting employee:", error);
-        setError(error.message);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete employee');
       }
+
+      setShowDeleteConfirm(false);
+      setShowDeleteSuccess(true);
+      fetchEmployees();
+      
+      setTimeout(() => {
+        setShowDeleteSuccess(false);
+      }, 3000);
+    } catch (error) {
+      console.error("Error deleting employee:", error);
+      setError(error.message);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -141,7 +208,14 @@ const ViewEmployees = ({ authToken }) => {
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
-    setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page when filters change
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  const togglePasswordVisibility = (id) => {
+    setShowPassword(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
   };
 
   return (
@@ -161,49 +235,64 @@ const ViewEmployees = ({ authToken }) => {
                 setSearchTerm(e.target.value);
                 setPagination(prev => ({ ...prev, page: 1 }));
               }}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') fetchEmployees();
+              }}
             />
             <FiSearch className="absolute left-3 top-3 text-gray-400" />
           </div>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4 mb-6">
-        <div className="w-full md:w-auto">
-          <select
-            name="team"
-            value={filters.team}
-            onChange={handleFilterChange}
-            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">All Teams</option>
-            <option value="A">A</option>
-            <option value="B">B</option>
-            <option value="C">C</option>
-
-           
-          </select>
+      {/* Filters and Export */}
+      <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
+        <div className="flex flex-wrap gap-4">
+          <div className="w-full md:w-auto">
+            <select
+              name="team"
+              value={filters.team}
+              onChange={handleFilterChange}
+              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              disabled={isLoadingTeams}
+            >
+              <option value="">All Teams</option>
+              {teams.map((team) => (
+                <option key={team} value={team}>
+                  {team}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="w-full md:w-auto">
+            <select
+              name="designation"
+              value={filters.designation}
+              onChange={handleFilterChange}
+              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">All Designations</option>
+              <option value="Software Engineer">Software Engineer</option>
+              <option value="Senior Software Engineer">Senior Software Engineer</option>
+              <option value="Team Lead">Team Lead</option>
+              <option value="Project Manager">Project Manager</option>
+              <option value="UI/UX Designer">UI/UX Designer</option>
+              <option value="QA Engineer">QA Engineer</option>
+              <option value="DevOps Engineer">DevOps Engineer</option>
+              <option value="Product Manager">Product Manager</option>
+              <option value="HR Manager">HR Manager</option>
+              <option value="Marketing Specialist">Marketing Specialist</option>
+            </select>
+          </div>
         </div>
+
         <div className="w-full md:w-auto">
-          <select
-            name="designation"
-            value={filters.designation}
-            onChange={handleFilterChange}
-            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          <CSVLink
+            data={csvData}
+            filename={"employees.csv"}
+            className="flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
-            <option value="">All Designations</option>
-            <option value="">Select Designation</option>
-                  <option value="Software Engineer">Software Engineer</option>
-                  <option value="Senior Software Engineer">Senior Software Engineer</option>
-                  <option value="Team Lead">Team Lead</option>
-                  <option value="Project Manager">Project Manager</option>
-                  <option value="UI/UX Designer">UI/UX Designer</option>
-                  <option value="QA Engineer">QA Engineer</option>
-                  <option value="DevOps Engineer">DevOps Engineer</option>
-                  <option value="Product Manager">Product Manager</option>
-                  <option value="HR Manager">HR Manager</option>
-                  <option value="Marketing Specialist">Marketing Specialist</option>
-                </select>
+            <FiDownload className="mr-2" /> Export to CSV
+          </CSVLink>
         </div>
       </div>
 
@@ -217,6 +306,16 @@ const ViewEmployees = ({ authToken }) => {
         </div>
       )}
 
+      {/* Delete Success Message */}
+      {showDeleteSuccess && (
+        <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-6">
+          <div className="flex items-center">
+            <FiCheck className="text-green-500 mr-2" />
+            <span className="text-green-700">Employee deleted successfully!</span>
+          </div>
+        </div>
+      )}
+
       {/* Loading State */}
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
@@ -224,127 +323,161 @@ const ViewEmployees = ({ authToken }) => {
         </div>
       ) : (
         <>
-          {/* Employee Cards */}
+          {/* Employee Table */}
           {employees.length === 0 ? (
             <div className="bg-white p-8 rounded-lg shadow-sm text-center text-gray-500">
               No employees found matching your criteria
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {employees.map((employee) => (
-                <div key={employee._id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="p-6">
-                    <div className="flex items-center mb-4">
-                      <div className="bg-blue-100 p-3 rounded-full mr-4">
-                        <FiUser className="text-blue-600 text-xl" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-800">{employee.name}</h3>
-                        <p className="text-sm text-gray-500">@{employee.username}</p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <div className="flex items-center">
-                        <FiMail className="text-gray-400 mr-3" />
-                        <span className="text-gray-600">{employee.email}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <FiPhone className="text-gray-400 mr-3" />
-                        <span className="text-gray-600">{employee.phone}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <FiUsers className="text-gray-400 mr-3" />
-                        <span className="text-gray-600">{employee.team}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <FiBriefcase className="text-gray-400 mr-3" />
-                        <span className="text-gray-600">{employee.designation}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <FiUser className="text-gray-400 mr-3" />
-                        <span className="text-gray-600">{employee.username}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <FiKey className="text-gray-400 mr-3" />
-                        <span className="text-gray-600">{employee.password}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end space-x-2 mt-6">
-                      <button
-                        onClick={() => handleUpdateClick(employee)}
-                        className="flex items-center px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
-                      >
-                        <FiEdit className="mr-1" /> Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteEmployee(employee._id)}
-                        className="flex items-center px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-                      >
-                        <FiTrash2 className="mr-1" /> Delete
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Name
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Email
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Phone
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Team
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Designation
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Username
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Password
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {employees.map((employee) => (
+                      <tr key={employee._id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                              <FiUser className="text-blue-600" />
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">{employee.name}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{employee.email}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{employee.phone}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{employee.team}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{employee.designation}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{employee.username}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="text-sm text-gray-900">
+                              {showPassword[employee._id] ? employee.password : '••••••••'}
+                            </div>
+                            <button 
+                              onClick={() => togglePasswordVisibility(employee._id)}
+                              className="ml-2 text-gray-400 hover:text-gray-600"
+                            >
+                              {showPassword[employee._id] ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                            </button>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button
+                            onClick={() => handleUpdateClick(employee)}
+                            className="text-blue-600 hover:text-blue-900 mr-4"
+                          >
+                            <FiEdit className="inline mr-1" /> Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(employee._id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            <FiTrash2 className="inline mr-1" /> Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
           {/* Pagination Controls */}
           {pagination.pages > 1 && (
-            <div className="flex justify-between items-center mt-8">
-              <button
-                onClick={() => handlePageChange(pagination.page - 1)}
-                disabled={pagination.page === 1}
-                className={`flex items-center px-4 py-2 rounded-lg ${pagination.page === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}`}
-              >
-                <FiChevronLeft className="mr-1" /> Previous
-              </button>
-              
-              <div className="flex items-center space-x-2">
-                {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
-                  let pageNum;
-                  if (pagination.pages <= 5) {
-                    pageNum = i + 1;
-                  } else if (pagination.page <= 3) {
-                    pageNum = i + 1;
-                  } else if (pagination.page >= pagination.pages - 2) {
-                    pageNum = pagination.pages - 4 + i;
-                  } else {
-                    pageNum = pagination.page - 2 + i;
-                  }
-                  
-                  return (
-                    <button
-                      key={pageNum}
-                      onClick={() => handlePageChange(pageNum)}
-                      className={`w-10 h-10 rounded-full ${pagination.page === pageNum ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'}`}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
-                {pagination.pages > 5 && pagination.page < pagination.pages - 2 && (
-                  <span className="px-2">...</span>
-                )}
-                {pagination.pages > 5 && pagination.page < pagination.pages - 2 && (
-                  <button
-                    onClick={() => handlePageChange(pagination.pages)}
-                    className={`w-10 h-10 rounded-full ${pagination.page === pagination.pages ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'}`}
-                  >
-                    {pagination.pages}
-                  </button>
-                )}
+            <div className="flex flex-col md:flex-row justify-between items-center mt-6">
+              <div className="mb-4 md:mb-0">
+                <p className="text-sm text-gray-700">
+                  Showing <span className="font-medium">{(pagination.page - 1) * pagination.limit + 1}</span> to{' '}
+                  <span className="font-medium">
+                    {Math.min(pagination.page * pagination.limit, pagination.total)}
+                  </span> of{' '}
+                  <span className="font-medium">{pagination.total}</span> employees
+                </p>
               </div>
               
-              <button
-                onClick={() => handlePageChange(pagination.page + 1)}
-                disabled={pagination.page === pagination.pages}
-                className={`flex items-center px-4 py-2 rounded-lg ${pagination.page === pagination.pages ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}`}
-              >
-                Next <FiChevronRight className="ml-1" />
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={pagination.page === 1}
+                  className={`px-3 py-1 rounded-md ${pagination.page === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}`}
+                >
+                  <FiChevronLeft className="inline" /> Previous
+                </button>
+                
+                <div className="flex space-x-1">
+                  {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
+                    let pageNum;
+                    if (pagination.pages <= 5) {
+                      pageNum = i + 1;
+                    } else if (pagination.page <= 3) {
+                      pageNum = i + 1;
+                    } else if (pagination.page >= pagination.pages - 2) {
+                      pageNum = pagination.pages - 4 + i;
+                    } else {
+                      pageNum = pagination.page - 2 + i;
+                    }
+                    
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`w-8 h-8 rounded-md text-sm ${pagination.page === pageNum ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'}`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                <button
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={pagination.page === pagination.pages}
+                  className={`px-3 py-1 rounded-md ${pagination.page === pagination.pages ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}`}
+                >
+                  Next <FiChevronRight className="inline" />
+                </button>
+              </div>
             </div>
           )}
         </>
@@ -352,7 +485,7 @@ const ViewEmployees = ({ authToken }) => {
 
       {/* Update Employee Modal */}
       {isModalOpen && selectedEmployee && (
-        <div className="fixed inset-0  bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
             <div className="flex justify-between items-center border-b p-4">
               <h3 className="text-lg font-semibold">Update Employee</h3>
@@ -399,6 +532,17 @@ const ViewEmployees = ({ authToken }) => {
               </div>
 
               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                <input
+                  type="text"
+                  name="username"
+                  value={selectedEmployee.username || ''}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Team</label>
                 <select
                   name="team"
@@ -407,9 +551,11 @@ const ViewEmployees = ({ authToken }) => {
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Select Team</option>
-                  <option value="A">A</option>
-                  <option value="B">B</option>
-                  <option value="C">C</option>
+                  {teams.map((team) => (
+                    <option key={team} value={team}>
+                      {team}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -449,6 +595,42 @@ const ViewEmployees = ({ authToken }) => {
               >
                 <FiCheck className="mr-1" /> Save Changes
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center border-b p-4">
+              <h3 className="text-lg font-semibold">Confirm Deletion</h3>
+              <button 
+                onClick={() => setShowDeleteConfirm(false)} 
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FiX />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <p className="text-gray-700 mb-6">Are you sure you want to delete this employee? This action cannot be undone.</p>
+              
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteEmployee}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center"
+                >
+                  <FiTrash2 className="mr-1" /> Delete
+                </button>
+              </div>
             </div>
           </div>
         </div>

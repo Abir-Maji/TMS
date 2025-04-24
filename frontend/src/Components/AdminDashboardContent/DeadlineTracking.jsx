@@ -10,8 +10,13 @@ import {
   FiUser,
   FiX,
   FiSave,
-  FiLoader
+  FiLoader,
+  FiAward,
+  FiFlag
 } from 'react-icons/fi';
+import Select from 'react-select';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const DeadlineTracking = () => {
   const [tasks, setTasks] = useState([]);
@@ -19,6 +24,15 @@ const DeadlineTracking = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterPriority, setFilterPriority] = useState('all');
+  const [teams, setTeams] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [isLoadingTeams, setIsLoadingTeams] = useState(false);
+  const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState({
+    show: false,
+    taskId: null,
+    taskTitle: ''
+  });
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   const fetchTasks = async () => {
@@ -27,32 +41,87 @@ const DeadlineTracking = () => {
       const response = await fetch(`${API_BASE_URL}/api/tasks`);
       if (!response.ok) throw new Error('Failed to fetch tasks');
       const data = await response.json();
-      // Ensure tasks is always an array
       const tasksArray = Array.isArray(data) ? data : 
                         Array.isArray(data?.tasks) ? data.tasks : [];
       setTasks(tasksArray);
     } catch (error) {
       console.error('Error fetching tasks:', error);
       alert('Failed to fetch tasks');
-      setTasks([]); // Set to empty array on error
+      setTasks([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDelete = async (taskId) => {
-    if (window.confirm('Are you sure you want to delete this task?')) {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/tasks/${taskId}`, {
-          method: 'DELETE',
-        });
-        if (!response.ok) throw new Error('Failed to delete task');
-        alert('Task deleted successfully');
-        fetchTasks();
-      } catch (error) {
-        console.error('Error deleting task:', error);
-        alert('Failed to delete task');
-      }
+  const fetchTeams = async () => {
+    setIsLoadingTeams(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/fetch/team`);
+      if (!response.ok) throw new Error('Failed to fetch teams');
+      const data = await response.json();
+      setTeams(data.map(team => ({ value: team, label: team })));
+    } catch (error) {
+      console.error('Error fetching teams:', error);
+      toast.error('Failed to load teams');
+    } finally {
+      setIsLoadingTeams(false);
+    }
+  };
+
+  const fetchEmployees = async (team) => {
+    if (!team) {
+      setEmployees([]);
+      return;
+    }
+    
+    setIsLoadingEmployees(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/fetch/team/${team}`);
+      if (!response.ok) throw new Error('Failed to fetch employees');
+      const data = await response.json();
+      setEmployees(data.map(employee => ({
+        value: employee._id,
+        label: employee.name
+      })));
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      toast.error('Failed to load team members');
+    } finally {
+      setIsLoadingEmployees(false);
+    }
+  };
+
+  const showDeleteConfirmation = (taskId, taskTitle) => {
+    setDeleteConfirmation({
+      show: true,
+      taskId,
+      taskTitle
+    });
+  };
+
+  const hideDeleteConfirmation = () => {
+    setDeleteConfirmation({
+      show: false,
+      taskId: null,
+      taskTitle: ''
+    });
+  };
+
+  const handleDelete = async () => {
+    if (!deleteConfirmation.taskId) return;
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/tasks/${deleteConfirmation.taskId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete task');
+      toast.success('Task deleted successfully');
+      fetchTasks();
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      toast.error('Failed to delete task');
+    } finally {
+      hideDeleteConfirmation();
     }
   };
 
@@ -63,16 +132,16 @@ const DeadlineTracking = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...updatedData,
-          users: updatedData.users // Ensure we're using the correct field name
+          users: updatedData.assignedEmployees.map(emp => emp.label).join(', ')
         }),
       });
       if (!response.ok) throw new Error('Failed to update task');
-      alert('Task updated successfully');
+      toast.success('Task updated successfully');
       fetchTasks();
       setEditingTask(null);
     } catch (error) {
       console.error('Error updating task:', error);
-      alert('Failed to update task');
+      toast.error('Failed to update task');
     }
   };
 
@@ -85,11 +154,9 @@ const DeadlineTracking = () => {
     }
   };
 
-  // Safe filtering with null checks
   const filteredTasks = tasks?.filter(task => {
     const taskTitle = task?.title || '';
-    const taskUsers = task?.users || ''; // Changed from task.user to task.users
-    
+    const taskUsers = task?.users || '';
     const matchesSearch = taskTitle.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          taskUsers.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPriority = filterPriority === 'all' || task?.priority === filterPriority;
@@ -98,7 +165,31 @@ const DeadlineTracking = () => {
 
   useEffect(() => {
     fetchTasks();
+    fetchTeams();
   }, []);
+
+  useEffect(() => {
+    if (editingTask?.team) {
+      fetchEmployees(editingTask.team);
+    }
+  }, [editingTask?.team]);
+
+  const handleTeamSelect = (selectedOption) => {
+    const team = selectedOption ? selectedOption.value : '';
+    setEditingTask(prev => ({
+      ...prev,
+      team,
+      assignedEmployees: []
+    }));
+    fetchEmployees(team);
+  };
+
+  const handleEmployeeSelect = (selectedOptions) => {
+    setEditingTask(prev => ({
+      ...prev,
+      assignedEmployees: selectedOptions || []
+    }));
+  };
 
   return (
     <div className="">
@@ -215,13 +306,20 @@ const DeadlineTracking = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
-                          onClick={() => setEditingTask(task)}
+                          onClick={() => {
+                            setEditingTask({
+                              ...task,
+                              assignedEmployees: task.users 
+                                ? task.users.split(', ').map(user => ({ value: user, label: user }))
+                                : []
+                            });
+                          }}
                           className="text-blue-600 hover:text-blue-900 mr-4"
                         >
                           <FiEdit2 className="inline mr-1" /> Edit
                         </button>
                         <button
-                          onClick={() => handleDelete(task._id)}
+                          onClick={() => showDeleteConfirmation(task._id, task.title)}
                           className="text-red-600 hover:text-red-900"
                         >
                           <FiTrash2 className="inline mr-1" /> Delete
@@ -244,8 +342,8 @@ const DeadlineTracking = () => {
 
       {/* Edit Modal */}
       {editingTask && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl">
+        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center border-b border-gray-200 p-4">
               <h3 className="text-xl font-bold text-gray-800 flex items-center">
                 <FiEdit2 className="mr-2 text-blue-500" />
@@ -266,16 +364,20 @@ const DeadlineTracking = () => {
                   description: e.target.elements.description.value,
                   deadline: e.target.elements.deadline.value,
                   priority: e.target.elements.priority.value,
-                  team: e.target.elements.team.value,
-                  users: e.target.elements.users.value,
+                  team: editingTask.team,
+                  assignedEmployees: editingTask.assignedEmployees,
+                  progress: parseInt(e.target.elements.progress.value)
                 };
                 handleUpdate(editingTask._id, updatedData);
               }}
               className="p-6 space-y-4"
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <FiAward className="mr-2 text-blue-500" />
+                    Task Title *
+                  </label>
                   <input 
                     type="text" 
                     name="title" 
@@ -284,8 +386,26 @@ const DeadlineTracking = () => {
                     required 
                   />
                 </div>
+                
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <FiAlertTriangle className="mr-2 text-blue-500" />
+                    Description *
+                  </label>
+                  <textarea
+                    name="description"
+                    defaultValue={editingTask?.description || ''}
+                    rows="3"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    required
+                  />
+                </div>
+                
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <FiFlag className="mr-2 text-blue-500" />
+                    Priority *
+                  </label>
                   <select
                     name="priority"
                     defaultValue={editingTask?.priority || 'medium'}
@@ -297,18 +417,12 @@ const DeadlineTracking = () => {
                     <option value="low">Low Priority</option>
                   </select>
                 </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                  <textarea
-                    name="description"
-                    defaultValue={editingTask?.description || ''}
-                    rows="3"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    required
-                  />
-                </div>
+                
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Deadline</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <FiCalendar className="mr-2 text-blue-500" />
+                    Deadline *
+                  </label>
                   <input
                     type="date"
                     name="deadline"
@@ -317,27 +431,60 @@ const DeadlineTracking = () => {
                     required
                   />
                 </div>
+                
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Team</label>
-                  <input
-                    type="text"
-                    name="team"
-                    defaultValue={editingTask?.team || ''}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <FiUsers className="mr-2 text-blue-500" />
+                    Team/Group *
+                  </label>
+                  <Select
+                    options={teams}
+                    value={teams.find(team => team.value === editingTask.team)}
+                    onChange={handleTeamSelect}
+                    placeholder="Select a team"
+                    isLoading={isLoadingTeams}
+                    isClearable
+                    isSearchable
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Assigned To</label>
-                  <input
-                    type="text"
-                    name="users"
-                    defaultValue={editingTask?.users || ''}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <FiUser className="mr-2 text-blue-500" />
+                    Assign To *
+                  </label>
+                  <Select
+                    isMulti
+                    options={employees}
+                    value={editingTask.assignedEmployees}
+                    onChange={handleEmployeeSelect}
+                    placeholder="Select employees"
+                    isLoading={isLoadingEmployees}
+                    isDisabled={!editingTask.team || isLoadingEmployees}
+                    closeMenuOnSelect={false}
                     required
                   />
+                </div>
+                
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Progress (%)
+                  </label>
+                  <input
+                    type="range"
+                    name="progress"
+                    min="0"
+                    max="100"
+                    defaultValue={editingTask?.progress || 0}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <div className="text-center text-sm text-gray-600 mt-1">
+                    {editingTask?.progress || 0}% Complete
+                  </div>
                 </div>
               </div>
+              
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"
@@ -354,6 +501,46 @@ const DeadlineTracking = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmation.show && (
+        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center border-b border-gray-200 p-4">
+              <h3 className="text-xl font-bold text-gray-800 flex items-center">
+                <FiAlertTriangle className="mr-2 text-red-500" />
+                Confirm Deletion
+              </h3>
+              <button 
+                onClick={hideDeleteConfirmation}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FiX size={24} />
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-700 mb-4">
+                Are you sure you want to delete the task <span className="font-semibold">"{deleteConfirmation.taskTitle}"</span>?
+                This action cannot be undone.
+              </p>
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  onClick={hideDeleteConfirmation}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-red-500 transition flex items-center"
+                >
+                  <FiTrash2 className="mr-2" /> Delete
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

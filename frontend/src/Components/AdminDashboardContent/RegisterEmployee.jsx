@@ -8,7 +8,9 @@ import {
   FiEye, 
   FiEyeOff,
   FiPlusCircle,
-  FiBriefcase
+  FiBriefcase,
+  FiCheckCircle,
+  FiX
 } from 'react-icons/fi';
 
 const RegisterEmployee = () => {
@@ -22,6 +24,8 @@ const RegisterEmployee = () => {
     username: '',
     password: ''
   });
+  const [successMessage, setSuccessMessage] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Designation options as separate cards
   const designationCards = [
@@ -108,7 +112,8 @@ const RegisterEmployee = () => {
 
       const result = await response.json();
       if (response.ok) {
-        alert('Employee registered successfully');
+        setSuccessMessage('Employee registered successfully!');
+        setShowSuccess(true);
         setFormData({
           name: '',
           email: '',
@@ -118,17 +123,48 @@ const RegisterEmployee = () => {
           username: '',
           password: ''
         });
+        
+        // Hide success message after 5 seconds
+        setTimeout(() => {
+          setShowSuccess(false);
+        }, 5000);
       } else {
-        alert(result.message || 'Registration failed');
+        setSuccessMessage(result.message || 'Registration failed');
+        setShowSuccess(true);
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('An error occurred during registration');
+      setSuccessMessage('An error occurred during registration');
+      setShowSuccess(true);
     }
+  };
+
+  const closeSuccessMessage = () => {
+    setShowSuccess(false);
   };
 
   return (
     <div className="">
+      {/* Success Notification */}
+      {showSuccess && (
+        <div className="fixed top-4 right-4 z-50">
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-lg max-w-sm flex items-start justify-between">
+            <div className="flex items-start">
+              <FiCheckCircle className="text-green-500 mt-1 mr-2 flex-shrink-0" size={20} />
+              <div>
+                <p className="font-medium">{successMessage}</p>
+              </div>
+            </div>
+            <button 
+              onClick={closeSuccessMessage}
+              className="ml-4 text-green-700 hover:text-green-900"
+            >
+              <FiX size={18} />
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="w-auto bg-white rounded-2xl shadow-xl overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-500 py-6 px-8 text-white">
