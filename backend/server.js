@@ -22,6 +22,7 @@ const fetchRoutes = require('./routes/taskFetch');
 const authRoutes = require('./routes/auth');
 const teamRoutes = require('./routes/teamRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -220,6 +221,7 @@ connectDB().then(async () => {
   app.use('/api/fetch', fetchRoutes);
   app.use('/api/teams', teamRoutes);
   app.use('/api/notifications', notificationRoutes);
+  app.use('/api/admins', adminRoutes);
 
   mongoose.connection.on('connected', () => {
     console.log('MongoDB connected:', mongoose.connection.host);

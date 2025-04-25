@@ -8,7 +8,9 @@ import {
   FiTrendingUp,
   FiTrendingDown,
   FiArrowUp,
-  FiArrowDown
+  FiArrowDown,
+  FiPlus,
+  FiX
 } from 'react-icons/fi';
 import PieChartComponent from '../AdminDashboardContent/Charts/PieChartComponent';
 import PropTypes from 'prop-types';
@@ -77,11 +79,201 @@ DesignationCard.propTypes = {
   })
 };
 
+const AddAdminModal = ({ isOpen, onClose, onAddAdmin }) => {
+
+  const [formData, setFormData] = useState({
+    username: '',
+    password: '',
+    name: '',
+    role: 'admin',
+    status: 'active',
+    permissions: ''
+  });
+  
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    
+    if (!formData.username || !formData.password || !formData.name) {
+      setError('Required fields are missing');
+      return;
+    }
+  
+    setIsSubmitting(true);
+    try {
+      const permissionsArray = formData.permissions 
+        ? formData.permissions.split(',').map(p => p.trim())
+        : [];
+  
+      await onAddAdmin({
+        ...formData,
+        permissions: permissionsArray
+      });
+      setFormData({ 
+        username: '',
+        password: '',
+        name: '',
+        role: 'admin',
+        status: 'active',
+        permissions: ''
+      });
+      onClose();
+    } catch (err) {
+      setError(err.message || 'Failed to add admin');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+  <div className="flex justify-between items-center border-b p-4">
+    <h3 className="text-lg font-semibold">Add New Admin</h3>
+    <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+      <FiX size={24} />
+    </button>
+  </div>
+  
+  <form onSubmit={handleSubmit} className="p-4 space-y-4">
+    {error && (
+      <div className="bg-red-50 text-red-600 p-2 rounded text-sm">
+        {error}
+      </div>
+    )}
+    
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">Full Name*</label>
+      <input
+        type="text"
+        name="name"
+        value={formData.name}
+        onChange={handleChange}
+        className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+        placeholder="Enter full name"
+        required
+      />
+    </div>
+    
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">Username*</label>
+      <input
+        type="text"
+        name="username"
+        value={formData.username}
+        onChange={handleChange}
+        className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+        placeholder="Enter username"
+        required
+      />
+    </div>
+    
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">Password*</label>
+      <input
+        type="password"
+        name="password"
+        value={formData.password}
+        onChange={handleChange}
+        className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+        placeholder="Enter password"
+        required
+        minLength="6"
+      />
+    </div>
+
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">Role*</label>
+      <select
+        name="role"
+        value={formData.role}
+        onChange={handleChange}
+        className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+        required
+      >
+        <option value="admin">Admin</option>
+        <option value="superadmin">Super Admin</option>
+        <option value="moderator">Moderator</option>
+      </select>
+    </div>
+
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">Status*</label>
+      <select
+        name="status"
+        value={formData.status}
+        onChange={handleChange}
+        className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+        required
+      >
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+        <option value="suspended">Suspended</option>
+      </select>
+    </div>
+
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">Permissions</label>
+      <input
+        type="text"
+        name="permissions"
+        value={formData.permissions}
+        onChange={handleChange}
+        className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+        placeholder="Comma-separated permissions (e.g., create,read,update)"
+      />
+      <p className="text-xs text-gray-500 mt-1">Leave blank for default permissions</p>
+    </div>
+    
+    <div className="flex justify-end space-x-2 pt-2">
+      <button
+        type="button"
+        onClick={onClose}
+        className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50"
+        disabled={isSubmitting}
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? 'Adding...' : 'Add Admin'}
+      </button>
+    </div>
+  </form>
+</div>
+            </div>
+  );
+};
+
+AddAdminModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onAddAdmin: PropTypes.func.isRequired
+};
+
 const DefaultContent = ({ authToken }) => {
   const [designationStats, setDesignationStats] = useState([]);
   const [teamStats, setTeamStats] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const fetchDesignationData = async () => {
     setIsLoading(true);
@@ -146,6 +338,33 @@ const DefaultContent = ({ authToken }) => {
     fetchDesignationData();
   };
 
+  const handleAddAdmin = async (adminData) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/admins/admins`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({
+          ...adminData,
+          role: 'admin',
+          status: 'active'
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to add admin');
+      }
+
+      setSuccessMessage('Admin added successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      throw err;
+    }
+  };
+
   const departmentData = useMemo(() => ({
     labels: teamStats?.map(team => team?.name) || [],
     datasets: [{
@@ -178,18 +397,37 @@ const DefaultContent = ({ authToken }) => {
               </p>
             </div>
           </div>
-          <button 
-            onClick={refreshData}
-            disabled={isLoading}
-            className="flex items-center px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
-            aria-label="Refresh data"
-            aria-busy={isLoading}
-          >
-            <FiRefreshCw className={`mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh Data
-          </button>
+          <div className="flex space-x-2">
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center px-4 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
+            >
+              <FiPlus className="mr-2" />
+              Add Admin
+            </button>
+            <button 
+              onClick={refreshData}
+              disabled={isLoading}
+              className="flex items-center px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+              aria-label="Refresh data"
+              aria-busy={isLoading}
+            >
+              <FiRefreshCw className={`mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh Data
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="bg-green-50 border-l-4 border-green-500 p-4">
+          <div className="flex items-center">
+            <FiAlertCircle className="text-green-500 mr-2" />
+            <span className="text-green-700">{successMessage}</span>
+          </div>
+        </div>
+      )}
 
       {/* Error Message */}
       {error && (
@@ -229,6 +467,13 @@ const DefaultContent = ({ authToken }) => {
         data={departmentData} 
         title="Team Distribution" 
         key={JSON.stringify(teamStats)}
+      />
+
+      {/* Add Admin Modal */}
+      <AddAdminModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onAddAdmin={handleAddAdmin}
       />
     </div>
   );
