@@ -84,6 +84,7 @@ router.post('/login', async (req, res) => {
   }
 });
 // Admin Login
+// In your admin login route, you need to return the admin data in the response
 router.post('/admin/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -102,15 +103,20 @@ router.post('/admin/login', async (req, res) => {
     req.session.user = {
       _id: admin._id,
       username: admin.username,
-      role: 'admin'
+      role: 'admin',
+      name: admin.name // Make sure to include the name
     };
-    req.session.cookie.httpOnly = true;
-    req.session.cookie.secure = process.env.NODE_ENV === 'production';
-    req.session.cookie.sameSite = 'lax';
+
     res.json({ 
       success: true,
       message: 'Admin login successful',
-      user: req.session.user
+      admin: { // Change from 'user' to 'admin' for clarity
+        _id: admin._id,
+        username: admin.username,
+        name: admin.name,
+        role: 'admin'
+      },
+      token: 'your-jwt-token-if-using' // Add if using JWT
     });
   } catch (error) {
     console.error('Admin login error:', error);

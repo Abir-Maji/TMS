@@ -80,7 +80,6 @@ DesignationCard.propTypes = {
 };
 
 const AddAdminModal = ({ isOpen, onClose, onAddAdmin }) => {
-
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -139,125 +138,126 @@ const AddAdminModal = ({ isOpen, onClose, onAddAdmin }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center p-4 z-50">
+
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-  <div className="flex justify-between items-center border-b p-4">
-    <h3 className="text-lg font-semibold">Add New Admin</h3>
-    <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-      <FiX size={24} />
-    </button>
-  </div>
-  
-  <form onSubmit={handleSubmit} className="p-4 space-y-4">
-    {error && (
-      <div className="bg-red-50 text-red-600 p-2 rounded text-sm">
-        {error}
-      </div>
-    )}
-    
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">Full Name*</label>
-      <input
-        type="text"
-        name="name"
-        value={formData.name}
-        onChange={handleChange}
-        className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
-        placeholder="Enter full name"
-        required
-      />
-    </div>
-    
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">Username*</label>
-      <input
-        type="text"
-        name="username"
-        value={formData.username}
-        onChange={handleChange}
-        className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
-        placeholder="Enter username"
-        required
-      />
-    </div>
-    
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">Password*</label>
-      <input
-        type="password"
-        name="password"
-        value={formData.password}
-        onChange={handleChange}
-        className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
-        placeholder="Enter password"
-        required
-        minLength="6"
-      />
-    </div>
-
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">Role*</label>
-      <select
-        name="role"
-        value={formData.role}
-        onChange={handleChange}
-        className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
-        required
-      >
-        <option value="admin">Admin</option>
-        <option value="superadmin">Super Admin</option>
-        <option value="moderator">Moderator</option>
-      </select>
-    </div>
-
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">Status*</label>
-      <select
-        name="status"
-        value={formData.status}
-        onChange={handleChange}
-        className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
-        required
-      >
-        <option value="active">Active</option>
-        <option value="inactive">Inactive</option>
-        <option value="suspended">Suspended</option>
-      </select>
-    </div>
-
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">Permissions</label>
-      <input
-        type="text"
-        name="permissions"
-        value={formData.permissions}
-        onChange={handleChange}
-        className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
-        placeholder="Comma-separated permissions (e.g., create,read,update)"
-      />
-      <p className="text-xs text-gray-500 mt-1">Leave blank for default permissions</p>
-    </div>
-    
-    <div className="flex justify-end space-x-2 pt-2">
-      <button
-        type="button"
-        onClick={onClose}
-        className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50"
-        disabled={isSubmitting}
-      >
-        Cancel
-      </button>
-      <button
-        type="submit"
-        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? 'Adding...' : 'Add Admin'}
-      </button>
-    </div>
-  </form>
-</div>
+        <div className="flex justify-between items-center border-b p-4">
+          <h3 className="text-lg font-semibold">Add New Admin</h3>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+            <FiX size={24} />
+          </button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+          {error && (
+            <div className="bg-red-50 text-red-600 p-2 rounded text-sm">
+              {error}
             </div>
+          )}
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name*</label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter full name"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Username*</label>
+            <input
+              type="text"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter username"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password*</label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter password"
+              required
+              minLength="6"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Role*</label>
+            <select
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+              required
+            >
+              <option value="admin">Admin</option>
+              <option value="superadmin">Super Admin</option>
+              <option value="moderator">Moderator</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Status*</label>
+            <select
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+              required
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Permissions</label>
+            <input
+              type="text"
+              name="permissions"
+              value={formData.permissions}
+              onChange={handleChange}
+              className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Comma-separated permissions (e.g., create,read,update)"
+            />
+            <p className="text-xs text-gray-500 mt-1">Leave blank for default permissions</p>
+          </div>
+          
+          <div className="flex justify-end space-x-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50"
+              disabled={isSubmitting}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Adding...' : 'Add Admin'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 };
 
@@ -274,6 +274,12 @@ const DefaultContent = ({ authToken }) => {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+
+  // Get user data from localStorage with fallbacks
+  const username = localStorage.getItem('adminUsername') ;
+  const name = localStorage.getItem('adminName') || username;
+  const role = localStorage.getItem('adminRole') || 'admin';
+  const id = localStorage.getItem('adminId') || '';
 
   const fetchDesignationData = async () => {
     setIsLoading(true);
@@ -389,7 +395,7 @@ const DefaultContent = ({ authToken }) => {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-800">
-                Welcome back, <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Admin</span>
+                Welcome back, <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">{name}</span>
               </h1>
               <p className="text-gray-600 flex items-center">
                 <FiBriefcase className="mr-2 text-blue-500" />

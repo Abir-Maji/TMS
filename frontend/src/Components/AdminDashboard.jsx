@@ -27,7 +27,11 @@ import NotificationBell from '../Components/AdminNotificationBell';
 const AdminDashboard = () => {
   const [activeContent, setActiveContent] = useState('default');
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
-  const [adminName, setAdminName] = useState('');
+  const [adminData, setAdminData] = useState({
+    name: '',
+    username: '',
+    role: 'admin'
+  });
   const [user, setUser] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const navigate = useNavigate();
@@ -36,20 +40,43 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchAdminData = async () => {
       try {
-        const nameFromStorage = localStorage.getItem('username') || 
-                               localStorage.getItem('name') || 
-                               'Admin';
-        setAdminName(nameFromStorage);
+        // Get all admin data from localStorage
+        const adminDataFromStorage = JSON.parse(localStorage.getItem('adminData')) || {};
+        
+        // Set admin data with proper fallbacks
+        setAdminData({
+          name: adminDataFromStorage.name || 
+                localStorage.getItem('adminName') || 
+                localStorage.getItem('username') || 
+                'Admin',
+          username: adminDataFromStorage.username || 
+                   localStorage.getItem('adminUsername') || 
+                   localStorage.getItem('username') || 
+                   'admin',
+          role: adminDataFromStorage.role || 
+                localStorage.getItem('adminRole') || 
+                'admin'
+        });
 
-        // Set user data for ChatIcon
+        // Set user data for ChatIcon with proper fallbacks
         setUser({
-          _id: localStorage.getItem('userId'),
+          _id: adminDataFromStorage._id || 
+               localStorage.getItem('adminId') || 
+               localStorage.getItem('userId') || 
+               '',
           role: 'admin',
-          name: nameFromStorage
+          name: adminDataFromStorage.name || 
+                localStorage.getItem('adminName') || 
+                localStorage.getItem('username') || 
+                'Admin'
         });
       } catch (error) {
         console.error('Error fetching admin data:', error);
-        setAdminName('Admin');
+        setAdminData({
+          name: 'Admin',
+          username: 'admin',
+          role: 'admin'
+        });
       }
     };
 
@@ -64,7 +91,13 @@ const AdminDashboard = () => {
       });
       
       if (response.ok) {
+        // Clear all admin-related data from localStorage
         localStorage.removeItem('authToken');
+        localStorage.removeItem('adminData');
+        localStorage.removeItem('adminUsername');
+        localStorage.removeItem('adminName');
+        localStorage.removeItem('adminRole');
+        localStorage.removeItem('adminId');
         localStorage.removeItem('username');
         localStorage.removeItem('name');
         localStorage.removeItem('userId');
@@ -212,12 +245,12 @@ const AdminDashboard = () => {
                   onClick={toggleDropdown}
                 >
                   <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold shadow-sm">
-                    {getInitials(adminName)}
+                    {getInitials(adminData.name)}
                   </div>
                   {isSidebarExpanded && (
                     <div className="text-right">
-                      <p className="text-sm font-medium text-gray-700">{adminName}</p>
-                      <p className="text-xs text-gray-500">Admin</p>
+                      <p className="text-sm font-medium text-gray-700">{adminData.username}</p>
+                      <p className="text-xs text-gray-500 capitalize">{adminData.role}</p>
                     </div>
                   )}
                 </div>
@@ -225,6 +258,10 @@ const AdminDashboard = () => {
                 {/* Dropdown Menu */}
                 {showDropdown && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-gray-100">
+                      <p className="text-sm font-medium text-gray-800">{adminData.username}</p>
+                      <p className="text-xs text-gray-500 capitalize">{adminData.role}</p>
+                    </div>
                     <div 
                       className="px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 cursor-pointer flex items-center transition-colors duration-300"
                       onClick={handleLogout}

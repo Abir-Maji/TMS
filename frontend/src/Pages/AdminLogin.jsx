@@ -31,9 +31,19 @@ const AdminLogin = ({ onLoginSuccess }) => {
       if (response.ok) {
         const data = await response.json();
         
-        // Store admin data in localStorage if needed
+        // Store admin data in localStorage
         if (data.admin) {
+          localStorage.setItem('adminData', JSON.stringify({
+            username: data.admin.username,
+            name: data.admin.name,
+            role: data.admin.role,
+            id: data.admin._id
+          }));
+          
+          // Also store individual items for easy access
           localStorage.setItem('adminUsername', data.admin.username);
+          localStorage.setItem('adminName', data.admin.name);
+          localStorage.setItem('adminRole', data.admin.role);
           localStorage.setItem('adminId', data.admin._id);
         }
         
@@ -84,7 +94,7 @@ const AdminLogin = ({ onLoginSuccess }) => {
         <div className="md:w-1/2 p-10 flex flex-col justify-center relative">
           {/* Back Button */}
           <button 
-            onClick={() => navigate(-1)}
+            onClick={handleBack}
             className="absolute top-6 left-6 flex items-center text-gray-500 hover:text-blue-600 transition-colors"
           >
             <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -169,7 +179,11 @@ const AdminLogin = ({ onLoginSuccess }) => {
                 </label>
               </div>
 
-             
+              <div className="text-sm">
+                <a href="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
+                  Forgot password?
+                </a>
+              </div>
             </div>
 
             <div>
