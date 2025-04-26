@@ -256,7 +256,7 @@ const EmployeeProfile = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium text-gray-700">Password</p>
-                      <p className="text-sm text-gray-500">Last updated 3 days ago</p>
+                      <p className="text-sm text-gray-500">Update</p>
                     </div>
                     <button
                       onClick={() => setIsEditingPassword(true)}

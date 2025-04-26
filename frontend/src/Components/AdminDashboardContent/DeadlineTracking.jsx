@@ -43,7 +43,11 @@ const DeadlineTracking = () => {
       const data = await response.json();
       const tasksArray = Array.isArray(data) ? data : 
                         Array.isArray(data?.tasks) ? data.tasks : [];
-      setTasks(tasksArray);
+      // Sort tasks by deadline (newest first)
+      const sortedTasks = [...tasksArray].sort((b, a) => {
+        return new Date(b.deadline) - new Date(a.deadline);
+      });
+      setTasks(sortedTasks);
     } catch (error) {
       console.error('Error fetching tasks:', error);
       alert('Failed to fetch tasks');
@@ -247,55 +251,81 @@ const DeadlineTracking = () => {
               <FiLoader className="animate-spin text-3xl text-blue-500" />
             </div>
           ) : (
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deadline</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned To</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+            <div className="min-w-full">
+              {/* Mobile View */}
+              <div className="md:hidden">
                 {filteredTasks.length > 0 ? (
                   filteredTasks.map((task) => (
-                    <tr key={task._id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-medium text-gray-900">{task?.title || 'Untitled Task'}</div>
-                        <div className="text-sm text-gray-500 truncate max-w-xs">{task?.description || 'No description'}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <FiClock className="mr-2 text-blue-500" />
-                          <span>{task?.deadline ? new Date(task.deadline).toLocaleDateString() : 'No deadline'}</span>
+                    <div key={task._id} className="p-4 border-b border-gray-200">
+                      <div className="flex justify-between items-start">
+                        <div className="font-medium text-gray-900 mb-2">{task?.title || 'Untitled Task'}</div>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => {
+                              setEditingTask({
+                                ...task,
+                                assignedEmployees: task.users 
+                                  ? task.users.split(', ').map(user => ({ value: user, label: user }))
+                                  : []
+                              });
+                            }}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            <FiEdit2 className="inline" />
+                          </button>
+                          <button
+                            onClick={() => showDeleteConfirmation(task._id, task.title)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            <FiTrash2 className="inline" />
+                          </button>
                         </div>
-                        <div className="text-xs text-gray-500">
-                          {task?.deadline ? 
-                            `${Math.ceil((new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24))} days remaining` :
-                            'No deadline set'}
+                      </div>
+                      
+                      <div className="text-sm text-gray-500 mb-2 whitespace-pre-wrap">
+                        {task?.description || 'No description'}
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <div className="font-medium text-gray-700">Deadline</div>
+                          <div className="flex items-center">
+                            <FiClock className="mr-1 text-blue-500" />
+                            <span>{task?.deadline ? new Date(task.deadline).toLocaleDateString() : 'No deadline'}</span>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {task?.deadline ? 
+                              `${Math.ceil((new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24))} days remaining` :
+                              'No deadline set'}
+                          </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getPriorityColor(task?.priority)}`}>
-                          {task?.priority || 'Not specified'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div className="flex items-center">
-                          <FiUsers className="mr-2 text-purple-500" />
-                          {task?.team || 'No team'}
+                        
+                        <div>
+                          <div className="font-medium text-gray-700">Priority</div>
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getPriorityColor(task?.priority)}`}>
+                            {task?.priority || 'Not specified'}
+                          </span>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div className="flex items-center">
-                          <FiUser className="mr-2 text-green-500" />
-                          {task?.users || 'Unassigned'}
+                        
+                        <div>
+                          <div className="font-medium text-gray-700">Team</div>
+                          <div className="flex items-center">
+                            <FiUsers className="mr-1 text-purple-500" />
+                            {task?.team || 'No team'}
+                          </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                        
+                        <div>
+                          <div className="font-medium text-gray-700">Assigned To</div>
+                          <div className="flex items-center">
+                            <FiUser className="mr-1 text-green-500" />
+                            <span className="whitespace-pre-wrap">{task?.users || 'Unassigned'}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-2">
+                        <div className="font-medium text-gray-700">Progress</div>
                         <div className="w-full bg-gray-200 rounded-full h-2.5">
                           <div 
                             className="bg-blue-600 h-2.5 rounded-full" 
@@ -303,39 +333,107 @@ const DeadlineTracking = () => {
                           ></div>
                         </div>
                         <span className="text-xs text-gray-500">{task?.progress || 0}% complete</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => {
-                            setEditingTask({
-                              ...task,
-                              assignedEmployees: task.users 
-                                ? task.users.split(', ').map(user => ({ value: user, label: user }))
-                                : []
-                            });
-                          }}
-                          className="text-blue-600 hover:text-blue-900 mr-4"
-                        >
-                          <FiEdit2 className="inline mr-1" /> Edit
-                        </button>
-                        <button
-                          onClick={() => showDeleteConfirmation(task._id, task.title)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <FiTrash2 className="inline mr-1" /> Delete
-                        </button>
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   ))
                 ) : (
-                  <tr>
-                    <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
-                      No tasks found matching your criteria
-                    </td>
-                  </tr>
+                  <div className="p-6 text-center text-gray-500">
+                    No tasks found matching your criteria
+                  </div>
                 )}
-              </tbody>
-            </table>
+              </div>
+              
+              {/* Desktop View */}
+              <table className="min-w-full divide-y divide-gray-200 hidden md:table">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deadline</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned To</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredTasks.length > 0 ? (
+                    filteredTasks.map((task) => (
+                      <tr key={task._id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4">
+                          <div className="font-medium text-gray-900">{task?.title || 'Untitled Task'}</div>
+                          <div className="text-sm text-gray-500 whitespace-pre-wrap max-w-xs">{task?.description || 'No description'}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center">
+                            <FiClock className="mr-2 text-blue-500" />
+                            <span>{task?.deadline ? new Date(task.deadline).toLocaleDateString() : 'No deadline'}</span>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {task?.deadline ? 
+                              `${Math.ceil((new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24))} days remaining` :
+                              'No deadline set'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getPriorityColor(task?.priority)}`}>
+                            {task?.priority || 'Not specified'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          <div className="flex items-center">
+                            <FiUsers className="mr-2 text-purple-500" />
+                            {task?.team || 'No team'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          <div className="flex items-center">
+                            <FiUser className="mr-2 text-green-500" />
+                            <span className="whitespace-pre-wrap">{task?.users || 'Unassigned'}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div 
+                              className="bg-blue-600 h-2.5 rounded-full" 
+                              style={{ width: `${task?.progress || 0}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-xs text-gray-500">{task?.progress || 0}% complete</span>
+                        </td>
+                        <td className="px-6 py-4 text-sm font-medium">
+                          <button
+                            onClick={() => {
+                              setEditingTask({
+                                ...task,
+                                assignedEmployees: task.users 
+                                  ? task.users.split(', ').map(user => ({ value: user, label: user }))
+                                  : []
+                              });
+                            }}
+                            className="text-blue-600 hover:text-blue-900 mr-4"
+                          >
+                            <FiEdit2 className="inline mr-1" /> Edit
+                          </button>
+                          <button
+                            onClick={() => showDeleteConfirmation(task._id, task.title)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            <FiTrash2 className="inline mr-1" /> Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
+                        No tasks found matching your criteria
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>

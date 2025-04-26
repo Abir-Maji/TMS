@@ -188,18 +188,18 @@ const TaskAssignment = () => {
   };
   
   return (
-    <div className="max-w-full mx-auto p-4">
+    <div className="max-w-full mx-auto p-2 sm:p-4">
       <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
-          <div className="flex items-center space-x-3">
-            <FiPlusCircle className="text-2xl" />
-            <h2 className="text-2xl font-bold">Create New Task</h2>
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 sm:p-6 text-white">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <FiPlusCircle className="text-xl sm:text-2xl" />
+            <h2 className="text-xl sm:text-2xl font-bold">Create New Task</h2>
           </div>
-          <p className="mt-1 opacity-90">Fill out the form below to assign a new task</p>
+          <p className="mt-1 text-sm sm:text-base opacity-90">Fill out the form below to assign a new task</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form onSubmit={handleSubmit} className="p-3 sm:p-6 space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2">
             {/* Title Field */}
             <div className="col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
@@ -211,7 +211,7 @@ const TaskAssignment = () => {
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                className="w-full px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                 placeholder="Enter task title"
                 required
               />
@@ -228,7 +228,7 @@ const TaskAssignment = () => {
                 value={formData.description}
                 onChange={handleChange}
                 rows="3"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                className="w-full px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                 placeholder="Describe the task in detail"
                 required
               />
@@ -245,7 +245,7 @@ const TaskAssignment = () => {
                 name="currentDate"
                 value={formData.currentDate}
                 readOnly
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                className="w-full px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
               />
             </div>
 
@@ -260,7 +260,7 @@ const TaskAssignment = () => {
                 name="deadline"
                 value={formData.deadline}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                className="w-full px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                 required
                 min={formData.currentDate}
               />
@@ -276,7 +276,7 @@ const TaskAssignment = () => {
                 name="priority"
                 value={formData.priority}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                className="w-full px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                 required
               >
                 <option value="high">High Priority</option>
@@ -291,16 +291,20 @@ const TaskAssignment = () => {
                 <FiUsers className="mr-2 text-blue-500" />
                 Team/Group *
               </label>
-              <Select
-                options={teams}
-                value={teams.find(team => team.value === formData.team)}
-                onChange={handleTeamSelect}
-                placeholder="Select a team"
-                isLoading={isLoadingTeams}
-                isClearable
-                isSearchable
-                required
-              />
+              <div className="text-sm">
+                <Select
+                  options={teams}
+                  value={teams.find(team => team.value === formData.team)}
+                  onChange={handleTeamSelect}
+                  placeholder="Select a team"
+                  isLoading={isLoadingTeams}
+                  isClearable
+                  isSearchable
+                  required
+                  classNamePrefix="react-select"
+                  className="react-select-container"
+                />
+              </div>
             </div>
 
             {/* Employee Assignment */}
@@ -309,20 +313,24 @@ const TaskAssignment = () => {
                 <FiUser className="mr-2 text-blue-500" />
                 Assign To *
               </label>
-              <Select
-                isMulti
-                options={employees}
-                value={formData.assignedEmployees}
-                onChange={handleEmployeeSelect}
-                placeholder="Select employees"
-                isLoading={isLoadingEmployees}
-                isDisabled={!formData.team || isLoadingEmployees}
-                closeMenuOnSelect={false}
-              />
+              <div className="text-sm">
+                <Select
+                  isMulti
+                  options={employees}
+                  value={formData.assignedEmployees}
+                  onChange={handleEmployeeSelect}
+                  placeholder="Select employees"
+                  isLoading={isLoadingEmployees}
+                  isDisabled={!formData.team || isLoadingEmployees}
+                  closeMenuOnSelect={false}
+                  classNamePrefix="react-select"
+                  className="react-select-container"
+                />
+              </div>
 
               {formData.assignedEmployees.length > 0 && (
                 <div className="mt-2">
-                  <p className="text-sm text-gray-600">
+                  <p className="text-xs sm:text-sm text-gray-600">
                     Assigned to: {formData.assignedEmployees.map(emp => emp.label).join(', ')}
                   </p>
                 </div>
@@ -331,11 +339,11 @@ const TaskAssignment = () => {
           </div>
 
           {/* Submit Button */}
-          <div className="pt-4">
+          <div className="pt-2 sm:pt-4">
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`w-full py-3 px-4 rounded-lg font-medium text-white transition ${
+              className={`w-full py-2 sm:py-3 px-4 rounded-lg font-medium text-white transition ${
                 isSubmitting
                   ? 'bg-blue-400 cursor-not-allowed'
                   : 'bg-blue-600 hover:bg-blue-700'
